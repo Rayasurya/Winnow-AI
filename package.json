@@ -1,5 +1,6 @@
 {
-  "name": "winnowai",
+  "name": "winnow-v8",
+  "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
