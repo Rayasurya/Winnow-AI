@@ -10,6 +10,20 @@ audit traceability that regulated pharmacovigilance (PV) work demands.
 > there is no real LLM and no live calls to FAERS, EudraVigilance, or any external database. It exists
 > to demonstrate the interaction model and UX of a multi-agent PV workspace.
 
+## Screenshots
+
+### 1. Collaborative Workspace
+![Workspace Interface](screenshots/workspace.png)
+
+### 2. Consolidated Safety Report
+![Report Output](screenshots/report.png)
+
+### 3. Interactive Forest Plot & Disproportionality Metrics
+![Charts split view](screenshots/charts.png)
+
+### 4. Multi-Agent Configuration & Logs
+![Agents details](screenshots/agents.png)
+
 ## The idea: a 4+1 agent architecture
 A single LLM can't carry the whole PV pipeline — each step needs different expertise, data access, and
 trust boundaries. WinnowAI models **four specialist agents governed by one orchestrator**:
