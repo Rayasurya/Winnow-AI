@@ -202,7 +202,31 @@ export const MOCK_CONVERSATIONS: Record<string, { messages: ChatMessage[]; artif
                   { kind: "heading", text: "Weekly Safety Surveillance Report" },
                   { kind: "paragraph", segs: [{ t: "text", v: "Safety surveillance run completed for Pembrolizumab. Five active signals detected, including two new disproportionality alerts." }] }
                 ],
-                drugs: [],
+                // TODO(ds): replace with DS token for Pembrolizumab drug data
+                drugs: [{
+                  name: "Pembrolizumab", className: "PD-1 inhibitor · Immune checkpoint inhibitor",
+                  refIndices: [7, 8, 9, 10],
+                  tabs: {
+                    Overview: [
+                      { label: "Mechanism of Action", body: "Humanized monoclonal IgG4 antibody that binds to PD-1 receptor on T cells, blocking interaction with PD-L1 and PD-L2 and restoring anti-tumor immune response." },
+                      { label: "Indications", body: "Melanoma (unresectable/metastatic), NSCLC (first-line, PD-L1 ≥50%), Head and Neck SCC, Hodgkin Lymphoma, Urothelial Carcinoma, MSI-H/dMMR solid tumors." },
+                      { label: "Pharmacokinetics", body: "IV administration; half-life ~22 days. Clearance increases with body weight. Minimal renal clearance; hepatic metabolism not a major pathway." },
+                    ],
+                    Dosing: [
+                      { label: "Adult — Standard", body: "200 mg IV every 3 weeks OR 400 mg IV every 6 weeks.\nAdministered as IV infusion over 30 minutes.\nContinue until disease progression or unacceptable toxicity." },
+                      { label: "Renal / Hepatic Impairment", body: "No dose adjustment required for mild-to-moderate renal or hepatic impairment. Not studied in severe impairment." },
+                    ],
+                    Safety: [
+                      { label: "Immune-Mediated Adverse Events (irAEs)", body: "Pneumonitis (3-8%), hepatitis (2-6%), colitis (1-3%), myocarditis (0.5-1%), thyroiditis (8-15%), adrenal insufficiency (0.5-2%), and dermatitis (10-20%). Severe (Grade 3+) irAEs occur in 10-15% of patients. Most manageable with corticosteroids and dose interruption." },
+                      { label: "Myocarditis (Boxed Warning)", body: "Immune-mediated myocarditis can be fatal. Disproportionality signal observed (PRR 4.1, n=5). Monitor for chest pain, dyspnoea, arrhythmia. Manage with high-dose corticosteroids and withhold pembrolizumab." },
+                      { label: "Contraindications", body: "Known hypersensitivity to pembrolizumab or excipients. History of severe infusion reactions." },
+                    ],
+                    Clinical: [
+                      { label: "Monitoring", body: "Baseline LFTs, thyroid function, and pulmonary function tests. Monitor for symptoms of irAEs throughout treatment. Periodic imaging for pneumonitis and hepatitis surveillance." },
+                      { label: "Key Interactions", body: "Systemic corticosteroids (may reduce efficacy if used before treatment). No known CYP-mediated drug-drug interactions due to monoclonal antibody clearance pathway." },
+                    ],
+                  },
+                }],
                 signals: [
                   { event: "Myocarditis", prr: "4.1", ci: "2.8 – 5.9", n: 5, level: "strong", chi2: "12.4", ror: "4.2" },
                   { event: "Pneumonitis", prr: "3.5", ci: "2.3 – 5.1", n: 18, level: "strong", chi2: "18.2", ror: "3.6" },
@@ -210,7 +234,13 @@ export const MOCK_CONVERSATIONS: Record<string, { messages: ChatMessage[]; artif
                   { event: "Colitis", prr: "2.2", ci: "1.2 – 3.8", n: 8, level: "moderate", chi2: "5.1", ror: "2.3" },
                   { event: "Nephritis", prr: "2.4", ci: "1.4 – 3.9", n: 8, level: "moderate", chi2: "6.2", ror: "2.5" }
                 ],
-                refs: [],
+                // TODO(ds): replace with DS token for Pembrolizumab reference data
+                refs: [
+                  { n: 7, title: "Pembrolizumab Immune-Related Adverse Events: A Systematic Review and Meta-Analysis", journal: "JAMA Oncology", authors: "Johnson DB, Reynolds KL, Sullivan RJ", year: 2023, evidenceStrength: "very-high", studyType: "Systematic Review", evidenceSnapshot: { summary: "Meta-analysis of 107 clinical trials characterizing irAE incidence. Myocarditis (0.8%), pneumonitis (5.2%), hepatitis (3.4%) confirmed as key safety signals.", studyDesign: "Systematic meta-analysis of clinical trials and observational cohorts", population: "Advanced malignancy patients treated with pembrolizumab (N = 24,847)" } },
+                  { n: 8, title: "PD-1 Inhibitor Myocarditis: Mechanisms and Clinical Presentation", journal: "Nature Reviews Cardiology", authors: "Moslehi JJ, Salem JE, Sosman JA", year: 2022, evidenceStrength: "very-high", studyType: "Review", evidenceSnapshot: { summary: "Comprehensive review of ICI myocarditis describing T-cell-mediated cardiomyocyte infiltration as the primary mechanism. Incidence 0.5-1.0% with 50% fatality in severe cases.", studyDesign: "Narrative review with case series", population: "ICI-treated patients with confirmed myocarditis (N = 312)" } },
+                  { n: 9, title: "Pembrolizumab Safety in Real-World Oncology Cohorts: FAERS Disproportionality Analysis 2018-2024", journal: "Drug Safety", authors: "Patel V, Zhang Y, Lee C", year: 2024, evidenceStrength: "high", studyType: "Cohort Study", evidenceSnapshot: { summary: "FAERS disproportionality analysis of pembrolizumab adverse events. Pneumonitis (PRR 3.5), myocarditis (PRR 4.1), hepatitis (PRR 2.8) consistently above threshold.", studyDesign: "Retrospective pharmacovigilance cohort", population: "FAERS reports with pembrolizumab as primary suspect (N = 42,108 reports)" } },
+                  { n: 10, title: "Management of irAEs in Patients Treated with Immune Checkpoint Inhibitors: ASCO Guideline Update", journal: "Journal of Clinical Oncology", authors: "Brahmer JR, Lacchetti C, Schneider BJ", year: 2023, evidenceStrength: "very-high", studyType: "Guideline", evidenceSnapshot: { summary: "Updated ASCO clinical practice guideline for irAE management including corticosteroid protocols for Grade 2-4 pneumonitis, hepatitis, and myocarditis.", studyDesign: "Clinical practice guideline", population: "Patients receiving immune checkpoint inhibitors across all approved indications" } },
+                ],
                 suggested: ["Why did myocarditis jump?", "Compare to last week's run", "Are any signals above the PRR 3.0 threshold?", "What are the data sources?"],
                 params: { compound: "Pembrolizumab", period: "Weekly Run - 2026-06-13", categories: ["Myocarditis", "Pneumonitis"], isSurveillance: true, reportId: "COMP-2026-005" },
                 artifactTitle: "Pembrolizumab Weekly Run",
@@ -234,12 +264,40 @@ export const MOCK_CONVERSATIONS: Record<string, { messages: ChatMessage[]; artif
                   { kind: "heading", text: "Monthly Safety Surveillance Report" },
                   { kind: "paragraph", segs: [{ t: "text", v: "Safety surveillance run completed for Atorvastatin. No new disproportionality signals or PRR threshold violations were detected." }] }
                 ],
-                drugs: [],
+                // TODO(ds): replace with DS token for Atorvastatin drug data
+                drugs: [{
+                  name: "Atorvastatin", className: "Statin · HMG-CoA reductase inhibitor",
+                  refIndices: [11, 12],
+                  tabs: {
+                    Overview: [
+                      { label: "Mechanism of Action", body: "Competitive inhibitor of HMG-CoA reductase, the rate-limiting enzyme in cholesterol biosynthesis. Reduces LDL-C, triglycerides, and modestly increases HDL-C." },
+                      { label: "Indications", body: "Primary hypercholesterolemia, mixed dyslipidemia, heterozygous familial hypercholesterolemia, cardiovascular disease prevention." },
+                      { label: "Pharmacokinetics", body: "Oral administration; peak plasma 1-2 h. ~98% protein-bound. Hepatic metabolism via CYP3A4. Half-life ~14 h; active metabolites extend PD effect." },
+                    ],
+                    Dosing: [
+                      { label: "Adult — Standard", body: "Initial: 10-20 mg once daily.\nTitrated up to 80 mg once daily based on LDL-C goals.\nMay be administered at any time of day with or without food." },
+                      { label: "Renal / Hepatic Impairment", body: "No dose adjustment for renal impairment. Contraindicated in active liver disease or unexplained persistent transaminase elevations." },
+                    ],
+                    Safety: [
+                      { label: "Boxed Warning", body: "Increased risk of new-onset diabetes (HbA1c and fasting glucose increases). Rare cases of rhabdomyolysis with renal failure secondary to myoglobinuria." },
+                      { label: "Myalgia", body: "Myalgia reported in 1-5% of patients. Disproportionality signal: PRR 1.8 (weak). Risk increased with higher doses, advanced age, and drug interactions (CYP3A4 inhibitors)." },
+                      { label: "Contraindications", body: "Active liver disease; unexplained persistent hepatic transaminase elevations; pregnancy and lactation; concomitant cyclosporine." },
+                    ],
+                    Clinical: [
+                      { label: "Monitoring", body: "Baseline LFTs and CPK levels. Recheck LFTs 12 weeks after initiation and periodically thereafter. Monitor for muscle symptoms." },
+                      { label: "Key Interactions", body: "CYP3A4 inhibitors (azole antifungals, macrolides, grapefruit juice) increase atorvastatin levels and myopathy risk. Warfarin increases INR." },
+                    ],
+                  },
+                }],
                 signals: [
                   { event: "Myalgia", prr: "1.8", ci: "1.1 – 2.9", n: 120, level: "weak", chi2: "3.2", ror: "1.8" },
                   { event: "Mild Transaminase Elevation", prr: "1.4", ci: "0.8 – 2.3", n: 45, level: "weak", chi2: "2.1", ror: "1.4" }
                 ],
-                refs: [],
+                // TODO(ds): replace with DS token for Atorvastatin reference data
+                refs: [
+                  { n: 11, title: "Statin-Associated Muscle Symptoms: Incidence and Risk Factors in a Large Real-World Cohort", journal: "JAMA Internal Medicine", authors: "Thompson PD, Clarkson PM, Rosenson RS", year: 2023, evidenceStrength: "high", studyType: "Cohort Study", evidenceSnapshot: { summary: "Large cohort study of 104,000 statin users. Myalgia incidence 5-10% with atorvastatin, dose-dependent. Disproportionality highest in patients ≥65 years and those on CYP3A4 inhibitors.", studyDesign: "Retrospective cohort using electronic health records", population: "Adults with ≥1 statin prescription (N = 104,000)" } },
+                  { n: 12, title: "Atorvastatin Hepatotoxicity: A Systematic Review of Post-Marketing Surveillance Data", journal: "Hepatology", authors: "Chen M, Suzuki A, Borlak J", year: 2022, evidenceStrength: "high", studyType: "Systematic Review", evidenceSnapshot: { summary: "Systematic review confirming mild transaminase elevation as the most common hepatic finding with atorvastatin. ALT >3× ULN in ~1.5% of patients. Dose-dependent effect.", studyDesign: "Systematic review of post-marketing data and clinical trials", population: "Patients on atorvastatin across 47 studies (N = 72,000)" } },
+                ],
                 suggested: ["Were there any new signal alerts?", "What are the stable background signals?", "When is the next scheduled run?"],
                 params: { compound: "Atorvastatin", period: "Monthly Run - 2026-06-01", categories: ["Myalgia"], isSurveillance: true, reportId: "COMP-2026-006", isSigned: true },
                 artifactTitle: "Atorvastatin Monthly Run",
@@ -303,6 +361,74 @@ export const REFERENCES: Reference[] = [
         title: "ICH E2E Pharmacovigilance Planning: Signal Detection Thresholds and Contextualization",
         journal: "International Journal of Clinical Pharmacology", authors: "WHO Safety Surveillance Committee", year: 2020,
         evidenceStrength: "very-high", studyType: "Guideline",
+      },
+      // TODO(ds): replace with DS token for Pembrolizumab reference data
+      {
+        n: 7,
+        title: "Pembrolizumab Immune-Related Adverse Events: A Systematic Review and Meta-Analysis",
+        journal: "JAMA Oncology", authors: "Johnson DB, Reynolds KL, Sullivan RJ", year: 2023,
+        evidenceStrength: "very-high", studyType: "Systematic Review",
+        evidenceSnapshot: {
+          summary: "Meta-analysis of 107 clinical trials characterizing irAE incidence. Myocarditis (0.8%), pneumonitis (5.2%), hepatitis (3.4%) confirmed as key safety signals.",
+          studyDesign: "Systematic meta-analysis of clinical trials and observational cohorts",
+          population: "Advanced malignancy patients treated with pembrolizumab (N = 24,847)",
+        },
+      },
+      {
+        n: 8,
+        title: "PD-1 Inhibitor Myocarditis: Mechanisms and Clinical Presentation",
+        journal: "Nature Reviews Cardiology", authors: "Moslehi JJ, Salem JE, Sosman JA", year: 2022,
+        evidenceStrength: "very-high", studyType: "Review",
+        evidenceSnapshot: {
+          summary: "Comprehensive review of ICI myocarditis describing T-cell-mediated cardiomyocyte infiltration as the primary mechanism. Incidence 0.5-1.0% with 50% fatality in severe cases.",
+          studyDesign: "Narrative review with case series",
+          population: "ICI-treated patients with confirmed myocarditis (N = 312)",
+        },
+      },
+      {
+        n: 9,
+        title: "Pembrolizumab Safety in Real-World Oncology Cohorts: FAERS Disproportionality Analysis 2018-2024",
+        journal: "Drug Safety", authors: "Patel V, Zhang Y, Lee C", year: 2024,
+        evidenceStrength: "high", studyType: "Cohort Study",
+        evidenceSnapshot: {
+          summary: "FAERS disproportionality analysis of pembrolizumab adverse events. Pneumonitis (PRR 3.5), myocarditis (PRR 4.1), hepatitis (PRR 2.8) consistently above threshold.",
+          studyDesign: "Retrospective pharmacovigilance cohort",
+          population: "FAERS reports with pembrolizumab as primary suspect (N = 42,108 reports)",
+        },
+      },
+      {
+        n: 10,
+        title: "Management of irAEs in Patients Treated with Immune Checkpoint Inhibitors: ASCO Guideline Update",
+        journal: "Journal of Clinical Oncology", authors: "Brahmer JR, Lacchetti C, Schneider BJ", year: 2023,
+        evidenceStrength: "very-high", studyType: "Guideline",
+        evidenceSnapshot: {
+          summary: "Updated ASCO clinical practice guideline for irAE management including corticosteroid protocols for Grade 2-4 pneumonitis, hepatitis, and myocarditis.",
+          studyDesign: "Clinical practice guideline",
+          population: "Patients receiving immune checkpoint inhibitors across all approved indications",
+        },
+      },
+      // TODO(ds): replace with DS token for Atorvastatin reference data
+      {
+        n: 11,
+        title: "Statin-Associated Muscle Symptoms: Incidence and Risk Factors in a Large Real-World Cohort",
+        journal: "JAMA Internal Medicine", authors: "Thompson PD, Clarkson PM, Rosenson RS", year: 2023,
+        evidenceStrength: "high", studyType: "Cohort Study",
+        evidenceSnapshot: {
+          summary: "Large cohort study of 104,000 statin users. Myalgia incidence 5-10% with atorvastatin, dose-dependent. Disproportionality highest in patients ≥65 years and those on CYP3A4 inhibitors.",
+          studyDesign: "Retrospective cohort using electronic health records",
+          population: "Adults with ≥1 statin prescription (N = 104,000)",
+        },
+      },
+      {
+        n: 12,
+        title: "Atorvastatin Hepatotoxicity: A Systematic Review of Post-Marketing Surveillance Data",
+        journal: "Hepatology", authors: "Chen M, Suzuki A, Borlak J", year: 2022,
+        evidenceStrength: "high", studyType: "Systematic Review",
+        evidenceSnapshot: {
+          summary: "Systematic review confirming mild transaminase elevation as the most common hepatic finding with atorvastatin. ALT >3× ULN in ~1.5% of patients. Dose-dependent effect.",
+          studyDesign: "Systematic review of post-marketing data and clinical trials",
+          population: "Patients on atorvastatin across 47 studies (N = 72,000)",
+        },
       },
     ];
 export const ANSWER_BLOCKS: AnswerBlock[] = [
@@ -410,6 +536,56 @@ export const DRUGS: DrugInfo[] = [
           Clinical: [
             { label: "Monitoring", body: "Periodic LFTs and renal function on chronic use; blood pressure in hypertensive or elderly patients; CBC for occult bleeding." },
             { label: "Key Interactions", body: "Anticoagulants (bleeding risk), ACE inhibitors / ARBs (reduced effect, renal risk), aspirin (antiplatelet interference), lithium and methotrexate (raised levels)." },
+          ],
+        },
+      },
+      // TODO(ds): replace with DS token for Pembrolizumab drug data
+      {
+        name: "Pembrolizumab", className: "PD-1 inhibitor · Immune checkpoint inhibitor",
+        refIndices: [7, 8, 9, 10],
+        tabs: {
+          Overview: [
+            { label: "Mechanism of Action", body: "Humanized monoclonal IgG4 antibody that binds to PD-1 receptor on T cells, blocking interaction with PD-L1 and PD-L2 and restoring anti-tumor immune response." },
+            { label: "Indications", body: "Melanoma (unresectable/metastatic), NSCLC (first-line, PD-L1 ≥50%), Head and Neck SCC, Hodgkin Lymphoma, Urothelial Carcinoma, MSI-H/dMMR solid tumors." },
+            { label: "Pharmacokinetics", body: "IV administration; half-life ~22 days. Clearance increases with body weight. Minimal renal clearance; hepatic metabolism not a major pathway." },
+          ],
+          Dosing: [
+            { label: "Adult — Standard", body: "200 mg IV every 3 weeks OR 400 mg IV every 6 weeks.\nAdministered as IV infusion over 30 minutes.\nContinue until disease progression or unacceptable toxicity." },
+            { label: "Renal / Hepatic Impairment", body: "No dose adjustment required for mild-to-moderate renal or hepatic impairment. Not studied in severe impairment." },
+          ],
+          Safety: [
+            { label: "Immune-Mediated Adverse Events (irAEs)", body: "Pneumonitis (3-8%), hepatitis (2-6%), colitis (1-3%), myocarditis (0.5-1%), thyroiditis (8-15%), adrenal insufficiency (0.5-2%), and dermatitis (10-20%). Severe (Grade 3+) irAEs occur in 10-15% of patients. Most manageable with corticosteroids and dose interruption." },
+            { label: "Myocarditis (Boxed Warning)", body: "Immune-mediated myocarditis can be fatal. Disproportionality signal observed (PRR 4.1, n=5). Monitor for chest pain, dyspnoea, arrhythmia. Manage with high-dose corticosteroids and withhold pembrolizumab." },
+            { label: "Contraindications", body: "Known hypersensitivity to pembrolizumab or excipients. History of severe infusion reactions." },
+          ],
+          Clinical: [
+            { label: "Monitoring", body: "Baseline LFTs, thyroid function, and pulmonary function tests. Monitor for symptoms of irAEs throughout treatment. Periodic imaging for pneumonitis and hepatitis surveillance." },
+            { label: "Key Interactions", body: "Systemic corticosteroids (may reduce efficacy if used before treatment). No known CYP-mediated drug-drug interactions due to monoclonal antibody clearance pathway." },
+          ],
+        },
+      },
+      // TODO(ds): replace with DS token for Atorvastatin drug data
+      {
+        name: "Atorvastatin", className: "Statin · HMG-CoA reductase inhibitor",
+        refIndices: [11, 12],
+        tabs: {
+          Overview: [
+            { label: "Mechanism of Action", body: "Competitive inhibitor of HMG-CoA reductase, the rate-limiting enzyme in cholesterol biosynthesis. Reduces LDL-C, triglycerides, and modestly increases HDL-C." },
+            { label: "Indications", body: "Primary hypercholesterolemia, mixed dyslipidemia, heterozygous familial hypercholesterolemia, cardiovascular disease prevention." },
+            { label: "Pharmacokinetics", body: "Oral administration; peak plasma 1-2 h. ~98% protein-bound. Hepatic metabolism via CYP3A4. Half-life ~14 h; active metabolites extend PD effect." },
+          ],
+          Dosing: [
+            { label: "Adult — Standard", body: "Initial: 10-20 mg once daily.\nTitrated up to 80 mg once daily based on LDL-C goals.\nMay be administered at any time of day with or without food." },
+            { label: "Renal / Hepatic Impairment", body: "No dose adjustment for renal impairment. Contraindicated in active liver disease or unexplained persistent transaminase elevations." },
+          ],
+          Safety: [
+            { label: "Boxed Warning", body: "Increased risk of new-onset diabetes (HbA1c and fasting glucose increases). Rare cases of rhabdomyolysis with renal failure secondary to myoglobinuria." },
+            { label: "Myalgia", body: "Myalgia reported in 1-5% of patients. Disproportionality signal: PRR 1.8 (weak). Risk increased with higher doses, advanced age, and drug interactions (CYP3A4 inhibitors)." },
+            { label: "Contraindications", body: "Active liver disease; unexplained persistent hepatic transaminase elevations; pregnancy and lactation; concomitant cyclosporine." },
+          ],
+          Clinical: [
+            { label: "Monitoring", body: "Baseline LFTs and CPK levels. Recheck LFTs 12 weeks after initiation and periodically thereafter. Monitor for muscle symptoms." },
+            { label: "Key Interactions", body: "CYP3A4 inhibitors (azole antifungals, macrolides, grapefruit juice) increase atorvastatin levels and myopathy risk. Warfarin increases INR." },
           ],
         },
       },

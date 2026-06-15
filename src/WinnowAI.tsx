@@ -1,11 +1,21 @@
 import type { TemporalMode, AdvancedParams, AnalysisState, StepStatus, EvidenceStrength, SignalRow, Reference, InlineSeg, AnswerBlock, DrugSection, DrugInfo, ResultData, FlowComponent, ToolArg, ThoughtStep, AgentThought, ChatMessage, AgentConversation, FlowScriptStep, SynthesisStep, AgentActivity, RespLength, SegUnit, ForestRow, TrendPoint, QuarterlyCount, OnsetBucket, KMPoint, RiskCell, DemoFeature, ArtifactTab, ResultTab, WordTok, SubAgent } from "./WinnowData";
 import { C, DEFAULT_ADVANCED, AGENTS, FLOWS, MOCK_HISTORY, GREETINGS, WELCOME_PHRASES, SIGNAL_ROWS, ARTIFACT_QUERY, MOCK_CONVERSATIONS, REFERENCES, ANSWER_BLOCKS, DRUGS, SUGGESTED, SAFETY_STEPS, PLANNER_THOUGHT, DATA_THOUGHT, MEDICAL_THOUGHT, PHI_THOUGHT, TRACE_AGENTS, SYNTHESIS_SEQUENCE, STORE_TEMPLATES, COMMS_LOG, MAX_FILES, BEAM_MS, MONTHS, YEARS, DRUG_TAB_ORDER, SIGNAL_COLOR, CHART_SOURCES, FOREST_ROWS, TREND_DATA, QUARTERLY_COUNTS, ONSET_BUCKETS, KM_CURVE, RISK_SEVERITY, RISK_SIGNAL, RISK_COLORS, RISK_SIGNALS, CASE_DEMOGRAPHICS, MULTI_SIGNAL_ROWS, AGENT_PANEL_INTROS, PROMPT_CHIPS, RETRIEVAL_SOURCES, VALIDATION_METHODS, PRIVACY_OPS } from "./WinnowData";
 import * as React from "react";
+import { Grid, Settings, LayoutPanelTop, AudioLines, FileText, Calendar, Info, CircleHelp, LogOut, Pen, Clock, ShoppingBag, X, ChevronRight, ChevronDown, Sparkles, List, Paperclip, Upload, Download, Check, Shield, ExternalLink, TrendingUp, Minimize, Maximize, User, CreditCard, SlidersHorizontal, Bell, Monitor, Folder, Book, Lock, HelpCircle, Building2, Users, File, ChevronUp, Square, ArrowUp, Mic, Search, ArrowRight, Pencil, MessageCircle, Link, Share2, ThumbsUp, ThumbsDown, Copy, FilePlus, CirclePlus, Mail, LoaderCircle } from "lucide-react";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { MetalFx } from "metal-fx";
 import { Modal } from "./components/ui/modal";
+import Button from "./components/ui/Button";
+import IconButton from "./components/ui/IconButton";
+import Select from "./components/ui/Select";
+import Tabs from "./components/ui/Tabs";
+import Card from "./components/ui/Card";
+import Badge from "./components/ui/Badge";
+import Pill from "./components/ui/Pill";
+import Radio from "./components/ui/Radio";
+import Checkbox from "./components/ui/Checkbox";
 
 // ─── Fonts ────────────────────────────────────────────────────────
 const fontLink = document.createElement("link");
@@ -307,23 +317,23 @@ function ConfigureAgentModal({ ag, onClose, onSave, previewRole }: { ag: any; on
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(15,23,42,0.40)", backdropFilter: "blur(4px)" }}
       onClick={onClose}>
-      <div style={{ background: C.card, borderRadius: 20, padding: 24, maxWidth: 460, width: "90vw", border: `1px solid ${C.border}`, boxShadow: "0 24px 80px rgba(0,0,0,0.18)" }}
+      <div style={{ background: C.card, borderRadius: 12, padding: 24, maxWidth: 460, width: "90vw", border: `1px solid ${C.border}`, boxShadow: "0 24px 80px rgba(0,0,0,0.18)" }}
         onClick={e => e.stopPropagation()}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ width: 10, height: 10, borderRadius: "50%", background: ag.color }} />
             <h3 style={{ fontSize: 16, fontWeight: 700, color: C.text1, margin: 0 }}>Configure {ag.name}</h3>
           </div>
-          <button onClick={onClose} style={{ border: "none", background: "transparent", fontSize: 20, color: "#64748b", cursor: "pointer" }}>&times;</button>
+          <IconButton onClick={onClose} aria-label="Close"><X size={20} /></IconButton>
         </div>
 
         {readOnly ? (
-          <p style={{ fontSize: 11.5, color: "#92400e", background: "#fef3c7", border: "1px solid #fcd34d", padding: "8px 12px", borderRadius: 8, marginBottom: 16, lineHeight: 1.4 }}>
+          <p style={{ fontSize: 11.5, color: "#92400e", background: "#fef3c7", border: "1px solid #fcd34d", padding: "8px 12px", borderRadius: 6, marginBottom: 16, lineHeight: 1.4 }}>
             ⚠️ governed configuration — contact your admin to request changes.
           </p>
         ) : (
           isSystem && (
-            <p style={{ fontSize: 11.5, color: "#92400e", background: "#fef3c7", border: "1px solid #fcd34d", padding: "8px 12px", borderRadius: 8, marginBottom: 16, lineHeight: 1.4 }}>
+            <p style={{ fontSize: 11.5, color: "#92400e", background: "#fef3c7", border: "1px solid #fcd34d", padding: "8px 12px", borderRadius: 6, marginBottom: 16, lineHeight: 1.4 }}>
               ⚠️ This is a core system agent. Modifying these rules changes the automated pharmacovigilance pipeline behavior.
             </p>
           )
@@ -334,12 +344,7 @@ function ConfigureAgentModal({ ag, onClose, onSave, previewRole }: { ag: any; on
             <>
               <div>
                 <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: C.text4, textTransform: "uppercase", marginBottom: 6 }}>Orchestration Strategy</label>
-                <select value={orchestration} onChange={e => setOrchestration(e.target.value)} disabled={readOnly}
-                  style={{ width: "100%", padding: "8px 12px", border: `1px solid ${C.border}`, borderRadius: 8, background: C.pageBg, color: C.text1, fontSize: 13, outline: "none" }}>
-                  <option value="staggered">Dynamic Staggered DAG (Recommended)</option>
-                  <option value="sequential">Sequential Pipeline</option>
-                  <option value="hierarchical">Hierarchical Critic Loop</option>
-                </select>
+                <Select value={orchestration} onChange={setOrchestration} disabled={readOnly} options={[{label:"Dynamic Staggered DAG (Recommended)",value:"staggered"},{label:"Sequential Pipeline",value:"sequential"},{label:"Hierarchical Critic Loop",value:"hierarchical"}]} />
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div>
@@ -348,14 +353,8 @@ function ConfigureAgentModal({ ag, onClose, onSave, previewRole }: { ag: any; on
                     style={{ width: "100%", padding: "8px 12px", border: `1px solid ${C.border}`, borderRadius: 8, background: C.pageBg, color: C.text1, fontSize: 13, outline: "none" }} />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 6 }}>
-                  <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.text2, cursor: "pointer" }}>
-                    <input type="checkbox" checked={strictEvans} onChange={e => setStrictEvans(e.target.checked)} disabled={readOnly} />
-                    Strict Evans Gating
-                  </label>
-                  <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.text2, cursor: "pointer" }}>
-                    <input type="checkbox" checked={autoRetry} onChange={e => setAutoRetry(e.target.checked)} disabled={readOnly} />
-                    Auto-retry timeouts
-                  </label>
+                  <Checkbox checked={strictEvans} onChange={v => setStrictEvans(v)} disabled={readOnly} label="Strict Evans Gating" />
+                  <Checkbox checked={autoRetry} onChange={v => setAutoRetry(v)} disabled={readOnly} label="Auto-retry timeouts" />
                 </div>
               </div>
             </>
@@ -381,7 +380,7 @@ function ConfigureAgentModal({ ag, onClose, onSave, previewRole }: { ag: any; on
                     return (
                       <button key={src} onClick={() => toggleSource(src)} disabled={readOnly}
                         style={{
-                          padding: "5px 10px", borderRadius: 6, border: `1px solid ${checked ? ag.color : C.border}`,
+                          padding: "5px 10px", borderRadius: 4, border: `1px solid ${checked ? ag.color : C.border}`,
                           background: checked ? `${ag.color}15` : "transparent", color: checked ? ag.color : C.text3,
                           fontSize: 12, fontWeight: 600, cursor: readOnly ? "not-allowed" : "pointer"
                         }}>
@@ -400,12 +399,7 @@ function ConfigureAgentModal({ ag, onClose, onSave, previewRole }: { ag: any; on
               </div>
               <div>
                 <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: C.text4, textTransform: "uppercase", marginBottom: 6 }}>Deduplication Strategy</label>
-                <select value={dedup} onChange={e => setDedup(e.target.value)} disabled={readOnly}
-                  style={{ width: "100%", padding: "8px 12px", border: `1px solid ${C.border}`, borderRadius: 8, background: C.pageBg, color: C.text1, fontSize: 13, outline: "none" }}>
-                  <option value="exact">Exact match on Age/Sex/Event</option>
-                  <option value="fuzzy">Fuzzy record deduplication (Recommended)</option>
-                  <option value="none">Suppress duplicates completely</option>
-                </select>
+                <Select value={dedup} onChange={setDedup} disabled={readOnly} options={[{label:"Exact match on Age/Sex/Event",value:"exact"},{label:"Fuzzy record deduplication (Recommended)",value:"fuzzy"},{label:"Suppress duplicates completely",value:"none"}]} />
               </div>
             </>
           )}
@@ -414,12 +408,7 @@ function ConfigureAgentModal({ ag, onClose, onSave, previewRole }: { ag: any; on
             <>
               <div>
                 <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: C.text4, textTransform: "uppercase", marginBottom: 6 }}>Causality Algorithm</label>
-                <select value={causality} onChange={e => setCausality(e.target.value)} disabled={readOnly}
-                  style={{ width: "100%", padding: "8px 12px", border: `1px solid ${C.border}`, borderRadius: 8, background: C.pageBg, color: C.text1, fontSize: 13, outline: "none" }}>
-                  <option value="who">WHO-UMC Causality Algorithm</option>
-                  <option value="bradford">Bradford-Hill Criteria</option>
-                  <option value="naranjo">Naranjo Score Card</option>
-                </select>
+                <Select value={causality} onChange={setCausality} disabled={readOnly} options={[{label:"WHO-UMC Causality Algorithm",value:"who"},{label:"Bradford-Hill Criteria",value:"bradford"},{label:"Naranjo Score Card",value:"naranjo"}]} />
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div>
@@ -439,12 +428,7 @@ function ConfigureAgentModal({ ag, onClose, onSave, previewRole }: { ag: any; on
               </div>
               <div>
                 <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: C.text4, textTransform: "uppercase", marginBottom: 6 }}>Evidence Weighting</label>
-                <select value={evidenceWeight} onChange={e => setEvidenceWeight(e.target.value)} disabled={readOnly}
-                  style={{ width: "100%", padding: "8px 12px", border: `1px solid ${C.border}`, borderRadius: 8, background: C.pageBg, color: C.text1, fontSize: 13, outline: "none" }}>
-                  <option value="spontaneous">Spontaneous reports weighted (FAERS/EudraVigilance)</option>
-                  <option value="clinical">Clinical trial weighted (FDA Label/PMR)</option>
-                  <option value="equal">Equal Weighting (Standard)</option>
-                </select>
+                <Select value={evidenceWeight} onChange={setEvidenceWeight} disabled={readOnly} options={[{label:"Spontaneous reports weighted (FAERS/EudraVigilance)",value:"spontaneous"},{label:"Clinical trial weighted (FDA Label/PMR)",value:"clinical"},{label:"Equal Weighting (Standard)",value:"equal"}]} />
               </div>
             </>
           )}
@@ -453,12 +437,7 @@ function ConfigureAgentModal({ ag, onClose, onSave, previewRole }: { ag: any; on
             <>
               <div>
                 <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: C.text4, textTransform: "uppercase", marginBottom: 6 }}>De-identification Standard</label>
-                <select value={deidStandard} onChange={e => setDeidStandard(e.target.value)} disabled={readOnly}
-                  style={{ width: "100%", padding: "8px 12px", border: `1px solid ${C.border}`, borderRadius: 8, background: C.pageBg, color: C.text1, fontSize: 13, outline: "none" }}>
-                  <option value="safeharbor">HIPAA Safe Harbor (18 Identifiers)</option>
-                  <option value="gdpr">GDPR Anonymization Standard</option>
-                  <option value="custom">Custom De-identification Rules</option>
-                </select>
+                <Select value={deidStandard} onChange={setDeidStandard} disabled={readOnly} options={[{label:"HIPAA Safe Harbor (18 Identifiers)",value:"safeharbor"},{label:"GDPR Anonymization Standard",value:"gdpr"},{label:"Custom De-identification Rules",value:"custom"}]} />
               </div>
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
@@ -469,12 +448,7 @@ function ConfigureAgentModal({ ag, onClose, onSave, previewRole }: { ag: any; on
               </div>
               <div>
                 <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: C.text4, textTransform: "uppercase", marginBottom: 6 }}>Audit Logging Level</label>
-                <select value={auditLevel} onChange={e => setAuditLevel(e.target.value)} disabled={readOnly}
-                  style={{ width: "100%", padding: "8px 12px", border: `1px solid ${C.border}`, borderRadius: 8, background: C.pageBg, color: C.text1, fontSize: 13, outline: "none" }}>
-                  <option value="full">Full compliance audit logging (Recommended)</option>
-                  <option value="alerts">Privacy alerts only</option>
-                  <option value="none">None (Internal diagnostics only)</option>
-                </select>
+                <Select value={auditLevel} onChange={setAuditLevel} disabled={readOnly} options={[{label:"Full compliance audit logging (Recommended)",value:"full"},{label:"Privacy alerts only",value:"alerts"},{label:"None (Internal diagnostics only)",value:"none"}]} />
               </div>
             </>
           )}
@@ -505,11 +479,11 @@ function ConfigureAgentModal({ ag, onClose, onSave, previewRole }: { ag: any; on
 
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={onClose}
-            style={{ flex: 1, padding: "9px 16px", fontSize: 13.5, fontWeight: 600, borderRadius: 8, border: `1px solid ${C.border}`, background: "#fff", color: C.text3, cursor: "pointer" }}>
+            style={{ flex: 1, padding: "9px 16px", fontSize: 13.5, fontWeight: 600, borderRadius: 6, border: `1px solid ${C.border}`, background: "#fff", color: C.text3, cursor: "pointer" }}>
             Cancel
           </button>
           <button onClick={handleSave} disabled={readOnly}
-            style={{ flex: 1, padding: "9px 16px", fontSize: 13.5, fontWeight: 600, borderRadius: 8, border: "none", background: readOnly ? C.border : ag.color, color: "#fff", cursor: readOnly ? "not-allowed" : "pointer" }}>
+            style={{ flex: 1, padding: "9px 16px", fontSize: 13.5, fontWeight: 600, borderRadius: 6, border: "none", background: readOnly ? C.border : ag.color, color: "#fff", cursor: readOnly ? "not-allowed" : "pointer" }}>
             {readOnly ? "Read-Only" : "Submit for change control"}
           </button>
         </div>
@@ -606,10 +580,10 @@ function AgentEditor({
   const capabilityName = capabilities.find(c => c.id === capability)?.name || capability;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: C.pageBg, fontFamily: "Manrope, sans-serif" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0, background: C.pageBg, fontFamily: "Manrope, sans-serif" }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 32px", borderBottom: `1px solid ${C.border}`, background: C.card, minHeight: 70 }}>
-        <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: C.text3, padding: "8px 12px", borderRadius: 8, display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 600 }}>
+        <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: C.text3, padding: "8px 12px", borderRadius: 6, display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 600 }}>
           ← Back to store
         </button>
         <div style={{ textAlign: "center", flex: 1 }}>
@@ -628,14 +602,14 @@ function AgentEditor({
         {/* Left Pane: Editor Form */}
         <div style={{ flex: 1, overflowY: "auto", padding: 32, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", gap: 24 }}>
           {isPhiLock && (isCreate || isStorePreview) && (
-            <div style={{ padding: "12px 16px", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 10, color: "#991b1b", fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ padding: "12px 16px", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 6, color: "#991b1b", fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}>
               <span>🔒</span>
               <strong>admin required</strong> to configure PHI Guard compliance sub-agents.
             </div>
           )}
 
           {subAgent?.status === "review" && (
-            <div style={{ padding: "12px 16px", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 10, color: "#1d4ed8", fontSize: 13 }}>
+            <div style={{ padding: "12px 16px", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 6, color: "#1d4ed8", fontSize: 13 }}>
               ℹ️ This sub-agent is <strong>In Review</strong>. Configuration changes are locked while pending.
             </div>
           )}
@@ -648,7 +622,7 @@ function AgentEditor({
               onChange={e => setName(e.target.value)} 
               disabled={isView || isStorePreview || subAgent?.status === "review"}
               placeholder="e.g. Pediatric Safety Lead"
-              style={{ width: "100%", padding: "10px 14px", border: `1px solid ${C.border}`, borderRadius: 8, background: C.card, color: C.text1, fontSize: 14, outline: "none" }}
+              style={{ width: "100%", padding: "10px 14px", border: `1px solid ${C.border}`, borderRadius: 6, background: C.card, color: C.text1, fontSize: 14, outline: "none" }}
             />
           </div>
 
@@ -659,7 +633,7 @@ function AgentEditor({
               value={parentId} 
               onChange={e => setParentId(e.target.value as any)}
               disabled={!isCreate || subAgent?.status === "review"}
-              style={{ width: "100%", padding: "10px 14px", border: `1px solid ${C.border}`, borderRadius: 8, background: C.card, color: C.text1, fontSize: 14, outline: "none" }}
+              style={{ width: "100%", padding: "10px 14px", border: `1px solid ${C.border}`, borderRadius: 6, background: C.card, color: C.text1, fontSize: 14, outline: "none" }}
             >
               <option value="data">Data Compiler (Evidence Retrieval)</option>
               <option value="medical">Medical Reviewer (Clinical Validation)</option>
@@ -671,16 +645,7 @@ function AgentEditor({
           {/* Capability */}
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <label style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: C.text4, letterSpacing: "0.05em" }}>Capability Axis Tool</label>
-            <select 
-              value={capability} 
-              onChange={e => setCapability(e.target.value)}
-              disabled={isView || isStorePreview || subAgent?.status === "review"}
-              style={{ width: "100%", padding: "10px 14px", border: `1px solid ${C.border}`, borderRadius: 8, background: C.card, color: C.text1, fontSize: 14, outline: "none" }}
-            >
-              {capabilities.map(c => (
-                <option key={c.id} value={c.id}>{c.name} — {c.desc}</option>
-              ))}
-            </select>
+            <Select value={capability} onChange={setCapability} disabled={isView || isStorePreview || subAgent?.status === "review"} options={capabilities.map(c => ({label: c.name + ' — ' + c.desc, value: c.id}))} />
           </div>
 
           {/* Description */}
@@ -692,7 +657,7 @@ function AgentEditor({
               disabled={isView || isStorePreview || subAgent?.status === "review"}
               placeholder="e.g. Scans clinical trials and safety registries for maternal-fetal hazard markers."
               rows={3}
-              style={{ width: "100%", padding: "10px 14px", border: `1px solid ${C.border}`, borderRadius: 8, background: C.card, color: C.text1, fontSize: 14, outline: "none", resize: "vertical" }}
+              style={{ width: "100%", padding: "10px 14px", border: `1px solid ${C.border}`, borderRadius: 6, background: C.card, color: C.text1, fontSize: 14, outline: "none", resize: "vertical" }}
             />
           </div>
 
@@ -705,7 +670,7 @@ function AgentEditor({
               disabled={isView || isStorePreview || subAgent?.status === "review"}
               placeholder="e.g. Focus on high-dose pediatric anomalies. Tag disproportionality metrics above 2.5."
               rows={4}
-              style={{ width: "100%", padding: "10px 14px", border: `1px solid ${C.border}`, borderRadius: 8, background: C.card, color: C.text1, fontSize: 14, outline: "none", resize: "vertical" }}
+              style={{ width: "100%", padding: "10px 14px", border: `1px solid ${C.border}`, borderRadius: 6, background: C.card, color: C.text1, fontSize: 14, outline: "none", resize: "vertical" }}
             />
           </div>
 
@@ -718,22 +683,22 @@ function AgentEditor({
                   value={newFileName} 
                   onChange={e => setNewFileName(e.target.value)}
                   placeholder="e.g. pediatric-dosage-guidelines-2025.pdf"
-                  style={{ flex: 1, padding: "8px 12px", border: `1px solid ${C.border}`, borderRadius: 6, background: C.card, color: C.text1, fontSize: 13, outline: "none" }}
+                  style={{ flex: 1, padding: "8px 12px", border: `1px solid ${C.border}`, borderRadius: 4, background: C.card, color: C.text1, fontSize: 13, outline: "none" }}
                 />
                 <button 
                   onClick={handleAddFile}
-                  style={{ padding: "8px 16px", background: C.brand, color: "#fff", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                  style={{ padding: "8px 16px", background: C.brand, color: "#fff", border: "none", borderRadius: 4, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
                 >
                   Add File
                 </button>
               </div>
             )}
-            <div style={{ border: `1px dashed ${C.border}`, padding: "14px", borderRadius: 8, background: C.card, display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={{ border: `1px dashed ${C.border}`, padding: "14px", borderRadius: 6, background: C.card, display: "flex", flexDirection: "column", gap: 6 }}>
               {uploadedFiles.length === 0 ? (
                 <p style={{ fontSize: 12, color: C.text5, margin: 0, textAlign: "center" }}>No knowledge files attached.</p>
               ) : (
                 uploadedFiles.map(f => (
-                  <div key={f} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: C.pageBg, padding: "6px 10px", borderRadius: 6, border: `1px solid ${C.border}` }}>
+                  <div key={f} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: C.pageBg, padding: "6px 10px", borderRadius: 4, border: `1px solid ${C.border}` }}>
                     <span style={{ fontSize: 12.5, color: C.text1, fontFamily: "monospace" }}>📄 {f}</span>
                     {!(isView || isStorePreview || subAgent?.status === "review") && (
                       <button 
@@ -760,7 +725,7 @@ function AgentEditor({
                   padding: "12px 20px", 
                   fontSize: 14, 
                   fontWeight: 600, 
-                  borderRadius: 8, 
+                  borderRadius: 6, 
                   border: "none", 
                   background: isPhiLock ? C.border : C.brand, 
                   color: isPhiLock ? C.text4 : "#fff", 
@@ -773,13 +738,13 @@ function AgentEditor({
               <div style={{ display: "flex", gap: 12, width: "100%" }}>
                 <button 
                   onClick={() => onStatusTransition?.(subAgent.id, parentId, "approve")}
-                  style={{ flex: 1, padding: "12px 20px", fontSize: 14, fontWeight: 600, borderRadius: 8, border: "none", background: "#10b981", color: "#fff", cursor: "pointer" }}
+                  style={{ flex: 1, padding: "12px 20px", fontSize: 14, fontWeight: 600, borderRadius: 6, border: "none", background: "#10b981", color: "#fff", cursor: "pointer" }}
                 >
                   Approve
                 </button>
                 <button 
                   onClick={() => onStatusTransition?.(subAgent.id, parentId, "return")}
-                  style={{ flex: 1, padding: "12px 20px", fontSize: 14, fontWeight: 600, borderRadius: 8, border: `1px solid #f59e0b`, background: "transparent", color: "#d97706", cursor: "pointer" }}
+                  style={{ flex: 1, padding: "12px 20px", fontSize: 14, fontWeight: 600, borderRadius: 6, border: `1px solid #f59e0b`, background: "transparent", color: "#d97706", cursor: "pointer" }}
                 >
                   Return
                 </button>
@@ -788,13 +753,13 @@ function AgentEditor({
               <div style={{ display: "flex", gap: 12, width: "100%" }}>
                 <button 
                   onClick={() => onStatusTransition?.(subAgent.id, parentId, "request_validation")}
-                  style={{ flex: 1, padding: "12px 20px", fontSize: 14, fontWeight: 600, borderRadius: 8, border: "none", background: "#2563eb", color: "#fff", cursor: "pointer" }}
+                  style={{ flex: 1, padding: "12px 20px", fontSize: 14, fontWeight: 600, borderRadius: 6, border: "none", background: "#2563eb", color: "#fff", cursor: "pointer" }}
                 >
                   Request validation
                 </button>
                 <button 
                   onClick={() => onClose()}
-                  style={{ flex: 1, padding: "12px 20px", fontSize: 14, fontWeight: 600, borderRadius: 8, border: `1px solid ${C.border}`, background: "transparent", color: C.text3, cursor: "pointer" }}
+                  style={{ flex: 1, padding: "12px 20px", fontSize: 14, fontWeight: 600, borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", color: C.text3, cursor: "pointer" }}
                 >
                   Close
                 </button>
@@ -802,7 +767,7 @@ function AgentEditor({
             ) : isView ? (
               <button 
                 onClick={onClose}
-                style={{ flex: 1, padding: "12px 20px", fontSize: 14, fontWeight: 600, borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, color: C.text1, cursor: "pointer" }}
+                style={{ flex: 1, padding: "12px 20px", fontSize: 14, fontWeight: 600, borderRadius: 6, border: `1px solid ${C.border}`, background: C.card, color: C.text1, cursor: "pointer" }}
               >
                 Close
               </button>
@@ -812,7 +777,7 @@ function AgentEditor({
                   <>
                     <button 
                       onClick={handleSaveClick}
-                      style={{ flex: 2, padding: "12px 20px", fontSize: 14, fontWeight: 600, borderRadius: 8, border: "none", background: C.brand, color: "#fff", cursor: "pointer" }}
+                      style={{ flex: 2, padding: "12px 20px", fontSize: 14, fontWeight: 600, borderRadius: 6, border: "none", background: C.brand, color: "#fff", cursor: "pointer" }}
                     >
                       Save & publish
                     </button>
@@ -833,7 +798,7 @@ function AgentEditor({
                           scope: "personal"
                         });
                       }}
-                      style={{ flex: 1, padding: "12px 20px", fontSize: 14, fontWeight: 600, borderRadius: 8, border: `1px solid ${C.border}`, background: "transparent", color: C.text3, cursor: "pointer" }}
+                      style={{ flex: 1, padding: "12px 20px", fontSize: 14, fontWeight: 600, borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", color: C.text3, cursor: "pointer" }}
                     >
                       Save as draft
                     </button>
@@ -841,7 +806,7 @@ function AgentEditor({
                 ) : (
                   <button 
                     onClick={handleSaveClick}
-                    style={{ flex: 1, padding: "12px 20px", fontSize: 14, fontWeight: 600, borderRadius: 8, border: "none", background: C.brand, color: "#fff", cursor: "pointer" }}
+                    style={{ flex: 1, padding: "12px 20px", fontSize: 14, fontWeight: 600, borderRadius: 6, border: "none", background: C.brand, color: "#fff", cursor: "pointer" }}
                   >
                     Save to my sandbox
                   </button>
@@ -849,7 +814,7 @@ function AgentEditor({
                 {isEdit && onDelete && subAgent && (subAgent.origin !== "builtin") && (
                   <button 
                     onClick={() => onDelete(subAgent.id, parentId)}
-                    style={{ padding: "12px 16px", fontSize: 14, fontWeight: 600, borderRadius: 8, border: "1px solid #fca5a5", background: "#fef2f2", color: "#b91c1c", cursor: "pointer" }}
+                    style={{ padding: "12px 16px", fontSize: 14, fontWeight: 600, borderRadius: 6, border: "1px solid #fca5a5", background: "#fef2f2", color: "#b91c1c", cursor: "pointer" }}
                   >
                     Delete
                   </button>
@@ -868,7 +833,7 @@ function AgentEditor({
             
             <div style={{ 
               border: `1px solid ${C.border}`, 
-              borderRadius: 14, 
+              borderRadius: 10, 
               padding: 20, 
               background: C.card, 
               position: "relative",
@@ -881,12 +846,12 @@ function AgentEditor({
                 {(() => {
                   const status = subAgent?.status || (isStorePreview ? (previewRole === "admin" ? "validated" : "sandbox") : isCreate ? (previewRole === "admin" ? "validated" : "sandbox") : "sandbox");
                   if (status === "validated") {
-                    return <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", background: "#d1fae5", color: "#065f46", border: "1px solid #a7f3d0", padding: "3px 8px", borderRadius: 20 }}>Validated</span>;
+                    return <Badge variant="success" size="sm">Validated</Badge>;
                   }
                   if (status === "review") {
-                    return <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", background: "#dbeafe", color: "#1d4ed8", border: "1px solid #bfdbfe", padding: "3px 8px", borderRadius: 20 }}>In Review</span>;
+                    return <Badge variant="info" size="sm">In Review</Badge>;
                   }
-                  return <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", background: "#fef3c7", color: "#d97706", border: "1px solid #fcd34d", padding: "3px 8px", borderRadius: 20 }}>Sandbox · Personal</span>;
+                  return <Badge variant="warning" size="sm">Sandbox · Personal</Badge>;
                 })()}
               </div>
 
@@ -899,10 +864,10 @@ function AgentEditor({
               </div>
 
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 10, background: "#f1f5f9", padding: "2px 6px", borderRadius: 4, color: C.text3, fontWeight: 600 }}>
+                <span style={{ fontSize: 10, background: "#f1f5f9", padding: "2px 6px", borderRadius: 2, color: C.text3, fontWeight: 600 }}>
                   Origin: {subAgent?.origin || (isStorePreview ? "store" : "custom")}
                 </span>
-                <span style={{ fontSize: 10, background: `${parentColor}10`, padding: "2px 6px", borderRadius: 4, color: parentColor, fontWeight: 600 }}>
+                <span style={{ fontSize: 10, background: `${parentColor}10`, padding: "2px 6px", borderRadius: 2, color: parentColor, fontWeight: 600 }}>
                   Tool: {capabilityName}
                 </span>
               </div>
@@ -911,7 +876,7 @@ function AgentEditor({
             </div>
           </div>
 
-          <div style={{ flex: 1, border: `1px solid ${C.border}`, borderRadius: 12, padding: 20, background: "#f8fafc", display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ flex: 1, border: `1px solid ${C.border}`, borderRadius: 6, padding: 20, background: "#f8fafc", display: "flex", flexDirection: "column", gap: 16 }}>
             <span style={{ fontSize: 10.5, fontWeight: 700, color: C.text4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
               Active Pipeline Deployment
             </span>
@@ -928,7 +893,7 @@ function AgentEditor({
                   <span style={{ color: C.text1, fontWeight: 600 }}>[{name || "Untitled Sub-Agent"}]</span>
                   <span style={{ color: C.text5, fontSize: 10 }}>(active)</span>
                 </div>
-                <div style={{ background: "#fff", padding: "8px 12px", border: `1px solid ${C.border}`, borderRadius: 6, fontSize: 11, color: C.text3 }}>
+                <div style={{ background: "#fff", padding: "8px 12px", border: `1px solid ${C.border}`, borderRadius: 4, fontSize: 11, color: C.text3 }}>
                   <span style={{ color: parentColor, fontWeight: 600 }}>run_tool: </span>
                   {capability}({parentId === "data" ? "query='ibuprofen adverse events'" : parentId === "medical" ? "signal_id='sig_465'" : "target='report_attestation'"})
                   <br />
@@ -945,18 +910,21 @@ function AgentEditor({
 }
 
 function AgentStorePage({
+  isOpen,
   onClose,
   onProvisionAgent,
   agentsList = AGENTS,
   previewRole,
   setPreviewRole
 }: {
+  isOpen: boolean;
   onClose: () => void;
   onProvisionAgent: (template: any) => void;
   agentsList: any[];
   previewRole: "scientist" | "admin";
   setPreviewRole: (role: "scientist" | "admin") => void;
 }) {
+  if (!isOpen) return null;
   const [search, setSearch] = useState("");
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [configuringAgent, setConfiguringAgent] = useState<string | null>(null);
@@ -1077,28 +1045,34 @@ function AgentStorePage({
 
   if (editorMode) {
     return (
-      <AgentEditor 
-        mode={editorMode}
-        subAgent={selectedSubAgent}
-        template={editorTemplate}
-        previewRole={previewRole}
-        onClose={() => {
-          setEditorMode(null);
-          setSelectedSubAgent(null);
-          setEditorTemplate(null);
-        }}
-        onSave={handleSaveSubAgent}
-        onDelete={handleDeleteSubAgent}
-        onStatusTransition={handleStatusTransition}
-      />
+      <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(15,23,42,0.40)", backdropFilter: "blur(4px)", padding: 16 }}>
+        <div style={{ background: "#ffffff", borderRadius: 12, maxWidth: 1260, width: "100%", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", border: "1px solid #cbd5e1", maxHeight: "92vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          <AgentEditor 
+            mode={editorMode}
+            subAgent={selectedSubAgent}
+            template={editorTemplate}
+            previewRole={previewRole}
+            onClose={() => {
+              setEditorMode(null);
+              setSelectedSubAgent(null);
+              setEditorTemplate(null);
+            }}
+            onSave={handleSaveSubAgent}
+            onDelete={handleDeleteSubAgent}
+            onStatusTransition={handleStatusTransition}
+          />
+        </div>
+      </div>
     );
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: C.pageBg, fontFamily: "Manrope, sans-serif" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(15,23,42,0.40)", backdropFilter: "blur(4px)", padding: 16 }}>
+      <div style={{ background: "#ffffff", borderRadius: 12, maxWidth: 1260, width: "100%", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", border: "1px solid #cbd5e1", maxHeight: "92vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", flexDirection: "column", flex: 1, background: C.pageBg, fontFamily: "Manrope, sans-serif", overflow: "hidden" }}>
       {/* toast notifications */}
       {toastMessage && (
-        <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 100, background: "#1f2937", color: "#fff", padding: "10px 16px", borderRadius: 8, fontSize: 13.5, fontWeight: 500, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
+        <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 100, background: "#1f2937", color: "#fff", padding: "10px 16px", borderRadius: 6, fontSize: 13.5, fontWeight: 500, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
           {toastMessage}
         </div>
       )}
@@ -1117,7 +1091,7 @@ function AgentStorePage({
         minHeight: 70 
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: C.text3, padding: "8px 12px", borderRadius: 8, display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 600 }}>
+          <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: C.text3, padding: "8px 12px", borderRadius: 6, display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 600 }}>
             ← Back to chat
           </button>
           <div style={{ width: 1, height: 24, background: C.border }} />
@@ -1136,7 +1110,7 @@ function AgentStorePage({
               alignItems: "center", 
               gap: 6, 
               padding: "6px 12px", 
-              borderRadius: 20, 
+              borderRadius: 12, 
               border: `1.5px dashed ${C.brand}`, 
               background: "transparent", 
               color: C.text1, 
@@ -1155,7 +1129,7 @@ function AgentStorePage({
               marginTop: 6, 
               background: C.card, 
               border: `1px solid ${C.border}`, 
-              borderRadius: 8, 
+              borderRadius: 6, 
               boxShadow: "0 4px 12px rgba(0,0,0,0.15)", 
               zIndex: 50, 
               width: 180,
@@ -1172,7 +1146,7 @@ function AgentStorePage({
                   border: "none", 
                   color: C.text1, 
                   fontSize: 12, 
-                  borderRadius: 6, 
+                  borderRadius: 4, 
                   cursor: "pointer",
                   fontWeight: previewRole === "scientist" ? 600 : 400
                 }}
@@ -1188,7 +1162,7 @@ function AgentStorePage({
                   border: "none", 
                   color: C.text1, 
                   fontSize: 12, 
-                  borderRadius: 6, 
+                  borderRadius: 4, 
                   cursor: "pointer",
                   fontWeight: previewRole === "admin" ? 600 : 400
                 }}
@@ -1216,11 +1190,36 @@ function AgentStorePage({
         flexDirection: "column", 
         gap: 40 
       }}>
-        {/* SECTION 1: My Agents */}
+          {/* SECTION 1: My Agents */}
         <section>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
             <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: C.text4, margin: 0 }}>My Agents</h2>
             <span style={{ fontSize: 11, color: C.text5 }}>Core Pipeline Architecture (4+1)</span>
+          </div>
+          {/* TODO(ds): use DS Card + DS tokens for agent cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16, marginTop: 4 }}>
+            {AGENTS.filter(a => a.id !== "ui").map(a => (
+              <div
+                key={a.id}
+                style={{ border: `1.5px solid ${C.border}`, borderRadius: 10, padding: 16, background: C.card, cursor: "pointer", display: "flex", flexDirection: "column", gap: 10, position: "relative", transition: "all 0.2s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = a.color; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.transform = "none"; }}
+              >
+                <div style={{ position: "absolute", top: 12, right: 12 }}>
+                  <Badge variant="neutral" size="sm">Built-in</Badge>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ width: 10, height: 10, borderRadius: "50%", background: a.color }} />
+                  <span style={{ fontSize: 13.5, fontWeight: 700, color: C.text1 }}>{a.name}</span>
+                </div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 9.5, color: C.text4, fontWeight: 600 }}>{a.role}</span>
+                </div>
+                <p style={{ fontSize: 12, color: C.text4, margin: 0, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                  {a.desc}
+                </p>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -1236,8 +1235,8 @@ function AgentStorePage({
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", border: `1px solid ${C.border}`, borderRadius: 9, background: C.card }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke={C.text4} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", border: `1px solid ${C.border}`, borderRadius: 6, background: C.card }}>
+                <Search size={13} color={C.text4} />
                 <input 
                   value={search} 
                   onChange={e => setSearch(e.target.value)} 
@@ -1262,7 +1261,7 @@ function AgentStorePage({
                         fontSize: 10.5, 
                         fontWeight: 600, 
                         padding: "3px 8px", 
-                        borderRadius: 6, 
+                        borderRadius: 4, 
                         border: `1.5px solid ${active ? color : C.border}`, 
                         background: active ? `${color}15` : C.card, 
                         color: active ? color : C.text3,
@@ -1287,7 +1286,7 @@ function AgentStorePage({
                         fontSize: 10.5, 
                         fontWeight: 600, 
                         padding: "3px 8px", 
-                        borderRadius: 6, 
+                        borderRadius: 4, 
                         border: `1.5px solid ${active ? C.brand : C.border}`, 
                         background: active ? `${C.brand}15` : C.card, 
                         color: active ? C.brand : C.text3,
@@ -1313,7 +1312,7 @@ function AgentStorePage({
                         fontSize: 10.5, 
                         fontWeight: 600, 
                         padding: "3px 8px", 
-                        borderRadius: 6, 
+                        borderRadius: 4, 
                         border: `1.5px solid ${active ? color : C.border}`, 
                         background: active ? `${color}15` : C.card, 
                         color: active ? color : C.text3,
@@ -1350,7 +1349,7 @@ function AgentStorePage({
                   }}
                   style={{ 
                     border: `1.5px solid ${C.border}`, 
-                    borderRadius: 14, 
+                    borderRadius: 10, 
                     padding: 16, 
                     background: C.card, 
                     cursor: "pointer", 
@@ -1364,26 +1363,10 @@ function AgentStorePage({
                   onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.transform = "none"; }}
                 >
                   <div style={{ position: "absolute", top: 12, right: 12 }}>
-                    {sa.status === "validated" && sa.origin === "builtin" && (
-                      <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", background: "#f1f5f9", color: "#475569", border: "1px solid #cbd5e1", padding: "2px 6px", borderRadius: 4 }}>
-                        Built-in
-                      </span>
-                    )}
-                    {sa.status === "validated" && sa.origin !== "builtin" && (
-                      <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", background: "#d1fae5", color: "#065f46", border: "1px solid #a7f3d0", padding: "2px 6px", borderRadius: 4 }}>
-                        Validated
-                      </span>
-                    )}
-                    {sa.status === "review" && (
-                      <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", background: "#dbeafe", color: "#1d4ed8", border: "1px solid #bfdbfe", padding: "2px 6px", borderRadius: 4 }}>
-                        In Review
-                      </span>
-                    )}
-                    {sa.status === "sandbox" && (
-                      <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", background: "#fef3c7", color: "#d97706", border: "1px solid #fcd34d", padding: "2px 6px", borderRadius: 4 }}>
-                        Sandbox
-                      </span>
-                    )}
+                    {sa.status === "validated" && sa.origin === "builtin" && <Badge variant="neutral" size="sm">Built-in</Badge>}
+                    {sa.status === "validated" && sa.origin !== "builtin" && <Badge variant="success" size="sm">Validated</Badge>}
+                    {sa.status === "review" && <Badge variant="info" size="sm">In Review</Badge>}
+                    {sa.status === "sandbox" && <Badge variant="warning" size="sm">Sandbox</Badge>}
                   </div>
 
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -1393,7 +1376,7 @@ function AgentStorePage({
 
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 9.5, color: C.text4, fontWeight: 600 }}>↳ {sa.parentName}</span>
-                    <span style={{ fontSize: 9.5, background: "#f1f5f9", padding: "1px 4px", borderRadius: 3, color: C.text3, fontWeight: 500 }}>{sa.origin}</span>
+                    <span style={{ fontSize: 9.5, background: "#f1f5f9", padding: "1px 4px", borderRadius: 2, color: C.text3, fontWeight: 500 }}>{sa.origin}</span>
                   </div>
 
                   <p style={{ fontSize: 12, color: C.text4, margin: 0, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
@@ -1423,7 +1406,7 @@ function AgentStorePage({
                 style={{ 
                   background: "transparent", 
                   border: `1.5px solid ${C.border}`, 
-                  borderRadius: 18, 
+                  borderRadius: 12, 
                   padding: "6px 16px", 
                   fontSize: 12, 
                   fontWeight: 600, 
@@ -1462,7 +1445,7 @@ function AgentStorePage({
                 }}
                 style={{
                   border: `1.5px dashed ${C.brand}`,
-                  borderRadius: 14,
+                  borderRadius: 10,
                   padding: 16,
                   background: "transparent",
                   cursor: "pointer",
@@ -1495,7 +1478,7 @@ function AgentStorePage({
                     }}
                     style={{ 
                       border: `1.5px solid ${C.border}`, 
-                      borderRadius: 14, 
+                      borderRadius: 10, 
                       padding: 16, 
                       background: C.card, 
                       cursor: "pointer", 
@@ -1510,7 +1493,7 @@ function AgentStorePage({
                     onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.transform = "none"; }}
                   >
                     {isLocked && (
-                      <div style={{ position: "absolute", top: 12, right: 12, display: "flex", alignItems: "center", gap: 3, fontSize: 9, fontWeight: 700, color: "#b91c1c", background: "#fef2f2", border: "1px solid #fca5a5", padding: "2px 6px", borderRadius: 4, textTransform: "uppercase" }}>
+                      <div style={{ position: "absolute", top: 12, right: 12, display: "flex", alignItems: "center", gap: 3, fontSize: 9, fontWeight: 700, color: "#b91c1c", background: "#fef2f2", border: "1px solid #fca5a5", padding: "2px 6px", borderRadius: 2, textTransform: "uppercase" }}>
                         🔒 admin required
                       </div>
                     )}
@@ -1533,7 +1516,7 @@ function AgentStorePage({
                         padding: "4px 10px", 
                         fontSize: 11.5, 
                         fontWeight: 600, 
-                        borderRadius: 6, 
+                        borderRadius: 4, 
                         border: `1px solid ${C.border}`, 
                         background: "transparent", 
                         color: C.text3, 
@@ -1567,7 +1550,7 @@ function AgentStorePage({
                 style={{ 
                   background: "transparent", 
                   border: `1.5px solid ${C.border}`, 
-                  borderRadius: 18, 
+                  borderRadius: 12, 
                   padding: "6px 16px", 
                   fontSize: 12, 
                   fontWeight: 600, 
@@ -1598,6 +1581,8 @@ function AgentStorePage({
           />
         );
       })()}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1621,12 +1606,7 @@ function UserMenu({ onClose, onOpenAgentStore, onOpenModal, onLogout }: {
     {
       group: "main",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 16 16" style={{ color: C.text3 }}>
-          <rect x="1" y="1" width="5" height="5" rx="1.2" fill="currentColor" opacity=".9" />
-          <rect x="10" y="1" width="5" height="5" rx="1.2" fill="currentColor" opacity=".9" />
-          <rect x="1" y="10" width="5" height="5" rx="1.2" fill="currentColor" opacity=".9" />
-          <rect x="10" y="10" width="5" height="5" rx="1.2" fill="currentColor" opacity=".9" />
-        </svg>
+        <Grid size={14} style={{ color: C.text3 }} />
       ),
       label: "Agents",
       onClick: () => { onClose(); onOpenAgentStore(); },
@@ -1634,9 +1614,7 @@ function UserMenu({ onClose, onOpenAgentStore, onOpenModal, onLogout }: {
     {
       group: "main",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256" style={{ color: C.text3 }}>
-          <path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.94,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.94,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06Zm-16.1-6.5a73.93,73.93,0,0,1,0,8.68,8,8,0,0,0,1.74,5.48l14.19,17.73a91.57,91.57,0,0,1-6.23,15L187,173.11a8,8,0,0,0-5.1,2.64,74.11,74.11,0,0,1-6.14,6.14,8,8,0,0,0-2.64,5.1l-2.51,22.58a91.32,91.32,0,0,1-15,6.23l-17.74-14.19a8,8,0,0,0-5-1.75h-.48a73.93,73.93,0,0,1-8.68,0,8,8,0,0,0-5.48,1.74L100.45,215.8a91.57,91.57,0,0,1-15-6.23L82.89,187a8,8,0,0,0-2.64-5.1,74.11,74.11,0,0,1-6.14-6.14,8,8,0,0,0-5.1-2.64L46.43,170.6a91.32,91.32,0,0,1-6.23-15l14.19-17.74a8,8,0,0,0,1.74-5.48,73.93,73.93,0,0,1,0-8.68,8,8,0,0,0-1.74-5.48L40.2,100.45a91.57,91.57,0,0,1,6.23-15L69,82.89a8,8,0,0,0,5.1-2.64,74.11,74.11,0,0,1,6.14-6.14A8,8,0,0,0,82.89,69L85.4,46.43a91.32,91.32,0,0,1,15-6.23l17.74,14.19a8,8,0,0,0,5.48,1.74,73.93,73.93,0,0,1,8.68,0,8,8,0,0,0,5.48-1.74L155.55,40.2a91.57,91.57,0,0,1,15,6.23L173.11,69a8,8,0,0,0,2.64,5.1,74.11,74.11,0,0,1,6.14,6.14,8,8,0,0,0,5.1,2.64l22.58,2.51a91.32,91.32,0,0,1,6.23,15l-14.19,17.74A8,8,0,0,0,199.87,123.66Z" />
-        </svg>
+        <Settings size={14} style={{ color: C.text3 }} />
       ),
       label: "Account",
       onClick: () => { onClose(); onOpenModal?.("account"); },
@@ -1644,9 +1622,7 @@ function UserMenu({ onClose, onOpenAgentStore, onOpenModal, onLogout }: {
     {
       group: "records",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256" style={{ color: C.text3 }}>
-          <path d="M220,48H56a12,12,0,0,0-12,12V192a12,12,0,0,0,12,12H220a12,12,0,0,0,12-12V60A12,12,0,0,0,220,48Zm-82,96H60V80h78Zm82-16H140V80h80Z" />
-        </svg>
+        <LayoutPanelTop size={14} style={{ color: C.text3 }} />
       ),
       label: "Compliance Reports",
       onClick: () => { onClose(); onOpenModal?.("workspace", "compliance"); },
@@ -1654,9 +1630,7 @@ function UserMenu({ onClose, onOpenAgentStore, onOpenModal, onLogout }: {
     {
       group: "records",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256" style={{ color: C.text3 }}>
-          <path d="M48,32H16A16,16,0,0,0,0,48V208a16,16,0,0,0,16,48H48a16,16,0,0,0,16-16V48A16,16,0,0,0,48,32Zm0,176H16V48H48ZM240,80H80a16,16,0,0,0-16,16v16a16,16,0,0,0,16,16h80v32H80a16,16,0,0,0-16,16v16a16,16,0,0,0,16,16h80v32a16,16,0,0,0,16,16h32a16,16,0,0,0,16-16V96A16,16,0,0,0,240,80Z" />
-        </svg>
+        <AudioLines size={14} style={{ color: C.text3 }} />
       ),
       label: "Audit Logs",
       onClick: () => { onClose(); onOpenModal?.("workspace", "audit"); },
@@ -1664,9 +1638,7 @@ function UserMenu({ onClose, onOpenAgentStore, onOpenModal, onLogout }: {
     {
       group: "records",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256" style={{ color: C.text3 }}>
-          <path d="M212,32H44A20,20,0,0,0,24,52V204a20,20,0,0,0,20,20H212a20,20,0,0,0,20-20V52A20,20,0,0,0,212,32Zm-4,168H48V56H208ZM76,100h80a8,8,0,0,1,0,16H76a8,8,0,0,1,0-16Zm0,32h80a8,8,0,0,1,0,16H76a8,8,0,0,1,0-16Z" />
-        </svg>
+        <FileText size={14} style={{ color: C.text3 }} />
       ),
       label: "Signature History",
       onClick: () => { onClose(); onOpenModal?.("workspace", "signatures"); },
@@ -1674,9 +1646,7 @@ function UserMenu({ onClose, onOpenAgentStore, onOpenModal, onLogout }: {
     {
       group: "knowledge",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256" style={{ color: C.text3 }}>
-          <path d="M232,64H216V32a8,8,0,0,0-16,0V64H152V32a8,8,0,0,0-16,0V64H88V32a8,8,0,0,0-16,0V64H24A16,16,0,0,0,8,80V216a16,16,0,0,0,16,16H232a16,16,0,0,0,16-16V80A16,16,0,0,0,232,64Zm0,152H24V80H232Zm-40-104a8,8,0,0,1,8,8v48a8,8,0,0,1-16,0v-48A8,8,0,0,1,192,112Zm-64,0a8,8,0,0,1,8,8v48a8,8,0,0,1-16,0v-48A8,8,0,0,1,128,112Z" />
-        </svg>
+        <Calendar size={14} style={{ color: C.text3 }} />
       ),
       label: "FDA/EMA Guidelines",
       onClick: () => { onClose(); onOpenModal?.("workspace", "guidelines"); },
@@ -1684,9 +1654,7 @@ function UserMenu({ onClose, onOpenAgentStore, onOpenModal, onLogout }: {
     {
       group: "knowledge",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256" style={{ color: C.text3 }}>
-          <path d="M144,152a8,8,0,1,1,8,8A8,8,0,0,1,144,152Zm88-48A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,104Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,104Zm-56-40a16,16,0,1,0-16-16A16,16,0,0,0,160,64Z" />
-        </svg>
+        <Info size={14} style={{ color: C.text3 }} />
       ),
       label: "HIPAA & Privacy",
       onClick: () => { onClose(); onOpenModal?.("workspace", "hipaa"); },
@@ -1694,9 +1662,7 @@ function UserMenu({ onClose, onOpenAgentStore, onOpenModal, onLogout }: {
     {
       group: "knowledge",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256" style={{ color: C.text3 }}>
-          <path d="M128,24A104,104,0,1,0,232,128,104.12,104.12,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8h-8v16a8,8,0,0,1-16,0v-16h-8a8,8,0,0,1,0-16h8V128a8,8,0,0,1,8-8h16a8,8,0,0,1,0,16h-8v32h8A8,8,0,0,1,144,176ZM116,84a12,12,0,1,1,12,12A12,12,0,0,1,116,84Z" />
-        </svg>
+        <CircleHelp size={14} style={{ color: C.text3 }} />
       ),
       label: "User Manual",
       onClick: () => { onClose(); onOpenModal?.("workspace", "manual"); },
@@ -1704,9 +1670,7 @@ function UserMenu({ onClose, onOpenAgentStore, onOpenModal, onLogout }: {
     {
       group: "knowledge",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256" style={{ color: C.text3 }}>
-          <path d="M76,100h80a8,8,0,0,1,0,16H76a8,8,0,0,1,0-16Zm0,32h80a8,8,0,0,1,0,16H76a8,8,0,0,1,0-16Z" />
-        </svg>
+        <FileText size={14} style={{ color: C.text3 }} />
       ),
       label: "Regulatory Docs",
       onClick: () => { onClose(); onOpenModal?.("workspace", "regdocs"); },
@@ -1747,9 +1711,7 @@ function UserMenu({ onClose, onOpenAgentStore, onOpenModal, onLogout }: {
           <button onClick={() => { onClose(); onLogout?.(); }}
             className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] transition-colors hover:bg-red-50"
             style={{ color: "#dc2626" }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256">
-              <path d="M120,216a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H56V208h56A8,8,0,0,1,120,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L204.69,120H112a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,229.66,122.34Z" />
-            </svg>
+            <LogOut size={14} />
             Log Out
           </button>
         </div>
@@ -1780,18 +1742,14 @@ function AgentCommsLogModal({ onClose }: { onClose: () => void }) {
       <motion.div initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
         transition={{ type: "spring", stiffness: 340, damping: 30 }}
         onClick={e => e.stopPropagation()}
-        style={{ width: "min(94vw, 820px)", maxHeight: "82vh", borderRadius: 18, background: C.card, border: `1px solid ${C.border}`, boxShadow: "0 32px 100px rgba(0,0,0,0.22)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        style={{ width: "min(94vw, 820px)", maxHeight: "82vh", borderRadius: 12, background: C.card, border: `1px solid ${C.border}`, boxShadow: "0 32px 100px rgba(0,0,0,0.22)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {/* header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke={C.brand} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-              <path d="M3 3h18v18H3z" /><path d="M3 9h18" /><path d="M9 21V9" />
-            </svg>
+            <Grid size={18} stroke={C.brand} strokeWidth={2.2} />
             <span style={{ fontSize: 15, fontWeight: 800, color: C.text1, fontFamily: "Manrope, sans-serif", letterSpacing: "-0.01em" }}>Agent Communication Log</span>
           </div>
-          <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: C.text4, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, padding: 6 }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>
-          </button>
+          <IconButton size="md" onClick={onClose}><X /></IconButton>
         </div>
         {/* sequence diagram */}
         <div style={{ flex: 1, overflowY: "auto", overflowX: "auto", padding: "24px 28px", scrollbarWidth: "thin", background: "#fafbfc" }}>
@@ -1850,8 +1808,8 @@ function AgentRow({ a, activity, onStopAgent }: { a: typeof AGENTS[0]; activity?
       <p className="text-[13px] font-semibold flex-1 truncate" style={{ color: activity ? C.text1 : C.text2 }}>{a.name}</p>
       {activity && hovered ? (
         <button onClick={() => onStopAgent?.(a.id)} title="Stop agent"
-          style={{ width: 20, height: 20, background: "#fee2e2", border: "none", cursor: "pointer", color: "#dc2626", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><rect x="1" y="1" width="8" height="8" rx="1.5" /></svg>
+          style={{ width: 20, height: 20, background: "#fee2e2", border: "none", cursor: "pointer", color: "#dc2626", borderRadius: 2, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <Square size={10} fill="currentColor" />
         </button>
       ) : (
         <AgentStatus agentId={a.id} state={activity} thinkingLabel={a.thinkingLabel} generatingLabel={a.generatingLabel} agentColor={a.color} />
@@ -1942,18 +1900,14 @@ function Sidebar({
               onMouseEnter={() => setHovered("new")} onMouseLeave={() => setHovered(null)}
               className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-colors duration-150"
               style={{ background: hovered === "new" ? C.cardHover : "transparent" }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: C.text4, flexShrink: 0 }}>
-                <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-              </svg>
+              <Pen size={16} style={{ color: C.text4, flexShrink: 0 }} />
               <span className="text-[13.5px] font-medium" style={{ color: C.text2 }}>New session</span>
             </button>
             <button onClick={() => onOpenModal?.("schedule")}
               onMouseEnter={() => setHovered("schedule")} onMouseLeave={() => setHovered(null)}
               className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-colors duration-150"
               style={{ background: hovered === "schedule" ? C.cardHover : "transparent" }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: C.text4, flexShrink: 0 }}>
-                <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-              </svg>
+              <Clock size={16} style={{ color: C.text4, flexShrink: 0 }} />
               <span className="text-[13.5px] font-medium" style={{ color: C.text2 }}>Schedule tasks</span>
             </button>
           </div>
@@ -1975,7 +1929,7 @@ function Sidebar({
                       {showSubs && (
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
                           exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2 }} style={{ overflow: "hidden" }}>
-                          <div className="ml-7 mb-1 space-y-0.5" style={{ borderLeft: `1.5px solid ${a.color}40`, paddingLeft: 8 }}>
+                          <div className="ml-6 mb-1 space-y-0.5" style={{ borderLeft: `1.5px solid ${a.color}40`, paddingLeft: 8 }}>
                             {subAgents.map((s: any, si: number) => (
                               <motion.div key={s.id} initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: si * 0.12 }}
@@ -2037,9 +1991,7 @@ function Sidebar({
             title="New session"
             className="flex items-center justify-center w-10 h-10 rounded-lg transition-colors"
             style={{ background: hovered === "new" ? C.cardHover : "transparent" }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: C.text3 }}>
-              <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-            </svg>
+            <Pen size={18} style={{ color: C.text3 }} />
           </button>
 
           <button onClick={() => onOpenModal?.("schedule")}
@@ -2047,9 +1999,7 @@ function Sidebar({
             title="Schedule tasks"
             className="flex items-center justify-center w-10 h-10 rounded-lg transition-colors"
             style={{ background: hovered === "schedule" ? C.cardHover : "transparent" }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: C.text3 }}>
-              <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-            </svg>
+            <Clock size={18} style={{ color: C.text3 }} />
           </button>
 
           <div style={{ width: 24, height: "1px", background: C.border, margin: "4px 0" }} />
@@ -2069,7 +2019,7 @@ function Sidebar({
           <div className="upgrade-ring w-full">
             <button onClick={() => onOpenModal?.("upgrade")} className="w-full flex items-center justify-center px-3 py-2 rounded-xl text-[12.5px] font-semibold text-white"
               style={{ background: "linear-gradient(135deg, #d97706, #f59e0b, #fbbf24)" }}>
-              View plans
+              Upgrade
             </button>
           </div>
           <div className="relative">
@@ -2088,21 +2038,17 @@ function Sidebar({
               <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
                 style={{ background: C.cardHover, color: C.text3 }}>R</div>
               <span className="text-[12.5px] font-medium flex-1 truncate text-left" style={{ color: C.text4 }}>Raya Surya</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256" style={{ color: C.text4, flexShrink: 0 }}>
-                <path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.94,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.94,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06Zm-16.1-6.5a73.93,73.93,0,0,1,0,8.68,8,8,0,0,0,1.74,5.48l14.19,17.73a91.57,91.57,0,0,1-6.23,15L187,173.11a8,8,0,0,0-5.1,2.64,74.11,74.11,0,0,1-6.14,6.14,8,8,0,0,0-2.64,5.1l-2.51,22.58a91.32,91.32,0,0,1-15,6.23l-17.74-14.19a8,8,0,0,0-5-1.75h-.48a73.93,73.93,0,0,1-8.68,0,8,8,0,0,0-5.48,1.74L100.45,215.8a91.57,91.57,0,0,1-15-6.23L82.89,187a8,8,0,0,0-2.64-5.1,74.11,74.11,0,0,1-6.14-6.14,8,8,0,0,0-5.1-2.64L46.43,170.6a91.32,91.32,0,0,1-6.23-15l14.19-17.74a8,8,0,0,0,1.74-5.48,73.93,73.93,0,0,1,0-8.68,8,8,0,0,0-1.74-5.48L40.2,100.45a91.57,91.57,0,0,1,6.23-15L69,82.89a8,8,0,0,0,5.1-2.64,74.11,74.11,0,0,1,6.14-6.14A8,8,0,0,0,82.89,69L85.4,46.43a91.32,91.32,0,0,1,15-6.23l17.74,14.19a8,8,0,0,0,5.48,1.74,73.93,73.93,0,0,1,8.68,0,8,8,0,0,0,5.48-1.74L155.55,40.2a91.57,91.57,0,0,1,15,6.23L173.11,69a8,8,0,0,0,2.64,5.1,74.11,74.11,0,0,1,6.14,6.14,8,8,0,0,0,5.1,2.64l22.58,2.51a91.32,91.32,0,0,1,6.23,15l-14.19,17.74A8,8,0,0,0,199.87,123.66Z"/>
-          </svg>
+              <Settings size={20} style={{ color: C.text4, flexShrink: 0 }} />
         </button>
       </div>
     </div>
   ) : (
     /* Collapsed footer */
     <div className="flex flex-col gap-2 px-2 pb-3 pt-2" style={{ borderTop: `1px solid ${C.border}` }}>
-      <button onClick={() => onOpenModal?.("upgrade")} title="View plans"
+      <button onClick={() => onOpenModal?.("upgrade")} title="Upgrade"
         className="flex items-center justify-center w-10 h-10 rounded-lg transition-colors"
         style={{ background: "linear-gradient(135deg, #d97706, #f59e0b)" }}>
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#fff" viewBox="0 0 256 256">
-          <path d="M240,120v96a16,16,0,0,1-16,16H32a16,16,0,0,1-16-16V120a16,16,0,0,1,16-16h8V88a8,8,0,0,1,16,0v16H192V88a8,8,0,0,1,16,0v16h8A16,16,0,0,1,240,120Zm-32,96V136H48v80ZM80,168a12,12,0,1,0,12,12A12,12,0,0,0,80,168Zm80,0a12,12,0,1,0,12,12A12,12,0,0,0,160,168Z" />
-        </svg>
+        <ShoppingBag size={18} color="#fff" />
       </button>
       <button onClick={() => setMenuOpen(o => !o)} title="Account"
         className="flex items-center justify-center w-10 h-10 rounded-lg transition-colors relative"
@@ -2165,9 +2111,7 @@ function FileTile({ file, onRemove }: { file: File; onRemove: () => void }) {
           display: "flex", alignItems: "center", justifyContent: "center",
           cursor: "pointer", boxShadow: "0 1px 3px rgba(0,0,0,0.10)",
         }}>
-        <svg xmlns="http://www.w3.org/2000/svg" width="7" height="7" viewBox="0 0 12 12" fill="none" stroke={C.text4} strokeWidth="2.5" strokeLinecap="round">
-          <line x1="1" y1="1" x2="11" y2="11" /><line x1="11" y1="1" x2="1" y2="11" />
-        </svg>
+        <X size={12} />
       </motion.button>
     </motion.div>
   );
@@ -2323,9 +2267,7 @@ function ChatInputBar({ onSend, placeholder = "Ask a follow-up question...", com
             <button aria-label="Upload files" onClick={() => fileInputRef.current?.click()}
               className="inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-gray-100 flex-shrink-0"
               style={{ color: C.text3 }} type="button">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
-                <path d="M209.66,122.34a8,8,0,0,1,0,11.32l-82.05,82a56,56,0,0,1-79.2-79.21L147.67,35.73a40,40,0,1,1,56.61,56.55L105,193A24,24,0,1,1,71,159L154.3,74.38A8,8,0,1,1,165.7,85.6L82.39,170.31a8,8,0,1,0,11.27,11.36L192.93,81A24,24,0,1,0,159,47L59.76,147.68a40,40,0,1,0,56.53,56.62l82.06-82A8,8,0,0,1,209.66,122.34Z" />
-              </svg>
+              <Paperclip size={16} />
             </button>
             <input ref={fileInputRef} multiple accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,.md"
               className="hidden" type="file" onChange={e => { handleFiles(e.target.files); e.target.value = ""; }} />
@@ -2347,9 +2289,7 @@ function ChatInputBar({ onSend, placeholder = "Ask a follow-up question...", com
           <button aria-label="Attach file" onClick={() => fileInputRef.current?.click()}
             className="inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-gray-100 flex-shrink-0"
             style={{ color: C.text3 }} type="button">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
-              <path d="M209.66,122.34a8,8,0,0,1,0,11.32l-82.05,82a56,56,0,0,1-79.2-79.21L147.67,35.73a40,40,0,1,1,56.61,56.55L105,193A24,24,0,1,1,71,159L154.3,74.38A8,8,0,1,1,165.7,85.6L82.39,170.31a8,8,0,1,0,11.27,11.36L192.93,81A24,24,0,1,0,159,47L59.76,147.68a40,40,0,1,0,56.53,56.62l82.06-82A8,8,0,0,1,209.66,122.34Z" />
-            </svg>
+            <Paperclip size={16} />
           </button>
         )}
         <motion.div layout className="flex items-center gap-2">
@@ -2370,9 +2310,7 @@ function ChatInputBar({ onSend, placeholder = "Ask a follow-up question...", com
                 className="inline-flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center rounded-full"
                 style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <rect x="6" y="6" width="12" height="12" fill="white" />
-                </svg>
+                <Square size={16} fill="white" />
               </motion.button>
             ) : (value.trim() || files.length > 0) ? (
               <motion.button
@@ -2390,9 +2328,7 @@ function ChatInputBar({ onSend, placeholder = "Ask a follow-up question...", com
                 className="inline-flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center rounded-full"
                 style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 19V5M5 12l7-7 7 7" />
-                </svg>
+                <ArrowUp size={16} stroke="white" strokeWidth={2.5} />
               </motion.button>
             ) : (
               <motion.button
@@ -2415,9 +2351,7 @@ function ChatInputBar({ onSend, placeholder = "Ask a follow-up question...", com
                 className="inline-flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center rounded-full"
                 style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256" fill="white">
-                  <path d="M128,176a48.05,48.05,0,0,0,48-48V64a48,48,0,0,0-96,0v64A48.05,48.05,0,0,0,128,176ZM96,64a32,32,0,0,1,64,0v64a32,32,0,0,1-64,0Zm40,143.6V240a8,8,0,0,1-16,0V207.6A80.11,80.11,0,0,1,48,128a8,8,0,0,1,16,0,64,64,0,0,0,128,0,8,8,0,0,1,16,0A80.11,80.11,0,0,1,136,207.6Z" />
-                </svg>
+                <Mic size={16} fill="white" />
               </motion.button>
             )}
           </AnimatePresence>
@@ -2450,7 +2384,7 @@ function CompoundSelector({ onSelect, locked, selection }: {
   if (locked && selection) {
     return (
       <motion.div initial={{ opacity: 1 }} className="mt-1">
-        <span style={{ display: "inline-flex", alignItems: "center", padding: "5px 12px", borderRadius: 8, fontSize: 13, fontWeight: 600, background: C.brandSoft, border: "1px solid #86efac", color: C.brandText, whiteSpace: "nowrap" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", padding: "5px 12px", borderRadius: 6, fontSize: 13, fontWeight: 600, background: C.brandSoft, border: "1px solid #86efac", color: C.brandText, whiteSpace: "nowrap" }}>
           {selection}
         </span>
       </motion.div>
@@ -2461,9 +2395,7 @@ function CompoundSelector({ onSelect, locked, selection }: {
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
       className="mt-1 rounded-xl overflow-hidden" style={{ border: `1px solid ${C.border}`, background: C.card, boxShadow: C.shadowSm }}>
       <div className="flex items-center gap-2 px-3 py-2.5" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256" style={{ color: C.text4, flexShrink: 0 }}>
-          <path d="M229.66,218.34l-50.06-50.07a88.21,88.21,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.31-11.31ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
-        </svg>
+        <Search size={14} style={{ color: C.text4, flexShrink: 0 }} />
         <input value={query} onChange={e => setQuery(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter" && filtered[0]) onSelect(filtered[0].name); }}
           placeholder="Search compound..." autoFocus
@@ -2541,7 +2473,7 @@ function DateRangePills({ onSelect, locked, selection }: {
         {periods.map(p => (
           <span key={p} style={{
             display: "inline-flex", alignItems: "center",
-            padding: "5px 12px", borderRadius: 8, fontSize: 13, fontWeight: 500,
+            padding: "5px 12px", borderRadius: 6, fontSize: 13, fontWeight: 500,
             whiteSpace: "nowrap",
             background: p === selection || (p === "Custom" && !periods.includes(selection!)) ? C.brandSoft : "transparent",
             border: `1px solid ${p === selection || (p === "Custom" && !periods.includes(selection!)) ? "#86efac" : C.border}`,
@@ -2569,9 +2501,7 @@ function DateRangePills({ onSelect, locked, selection }: {
             }}
             whileHover={{ borderColor: C.brand, color: C.brand, scale: 1.02 }}>
             {p === "Custom" && (
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 256 256">
-                <path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32Zm0,176H48V48H72v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V208ZM136,120a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h24V88a8,8,0,0,1,16,0Z"/>
-              </svg>
+              <Calendar size={13} />
             )}
             {p}
           </motion.button>
@@ -2588,9 +2518,7 @@ function DateRangePills({ onSelect, locked, selection }: {
               padding: "16px 18px",
             }}>
               <div className="flex items-center gap-2 mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill={C.text4} viewBox="0 0 256 256">
-                  <path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32Zm0,176H48V48H72v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V208ZM136,120a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h24V88a8,8,0,0,1,16,0Z"/>
-                </svg>
+                <Calendar size={14} />
                 <span className="text-[13px] font-semibold" style={{ color: C.text1 }}>Custom reporting period</span>
               </div>
               <div className="grid grid-cols-2 gap-4 mb-4">
@@ -2655,7 +2583,7 @@ function CustomSelect({ value, options, onChange }: {
         className="w-full flex items-center justify-between gap-2 transition-colors"
         style={{
           border: `1px solid ${open ? C.borderMid : C.border}`,
-          borderRadius: 8, padding: "5px 10px",
+          borderRadius: 6, padding: "5px 10px",
           fontSize: 12, color: C.text1, background: "#fff",
           fontFamily: "Manrope, sans-serif",
         }}>
@@ -2678,7 +2606,7 @@ function CustomSelect({ value, options, onChange }: {
               top: dropRect.top, left: dropRect.left, width: dropRect.width,
               zIndex: 9999,
               background: "#fff", border: `1px solid ${C.border}`,
-              borderRadius: 10, overflow: "hidden",
+              borderRadius: 6, overflow: "hidden",
               boxShadow: "0 8px 24px rgba(34,40,49,0.12)",
             }}>
             {options.map((opt, i) => (
@@ -2693,9 +2621,7 @@ function CustomSelect({ value, options, onChange }: {
                 }}>
                 {opt.label}
                 {opt.value === value && (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 256 256" style={{ color: C.brand }}>
-                    <path d="M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34Z"/>
-                  </svg>
+                  <Check size={12} style={{ color: C.brand }} />
                 )}
               </button>
             ))}
@@ -2713,12 +2639,7 @@ interface PillToggleProps {
 }
 
 function PillToggle({ label, active, onClick }: PillToggleProps): React.ReactElement {
-  return (
-    <button onClick={onClick} className="px-2.5 py-1 rounded-full text-[12px] font-medium transition-all"
-      style={{ background: active ? C.brandSoft : C.card, border: `1px solid ${active ? "#86efac" : C.border}`, color: active ? C.brandText : C.text3 }}>
-      {label}
-    </button>
-  );
+  return <Pill active={active} onClick={onClick}>{label}</Pill>;
 }
 
 
@@ -2859,18 +2780,14 @@ function CategoryPills({ onSelect, locked, selection }: {
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13.5px] font-semibold text-white transition-all animate-fadeIn"
               style={{ background: "linear-gradient(135deg, #059669, #0d9488)", boxShadow: "0 2px 8px rgba(5,150,105,0.25)" }}>
               Confirm
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
+              <ArrowRight size={14} stroke="white" strokeWidth={2.5} />
             </motion.button>
           )}
         </AnimatePresence>
         <button onClick={handleAdvancedClick}
           className="flex items-center gap-1.5 text-[12px] font-medium transition-colors"
           style={{ color: C.text4 }}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 256 256" >
-            <path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"/>
-          </svg>
+<ChevronRight size={11} />
           Advanced parameters
         </button>
       </div>
@@ -2941,7 +2858,12 @@ export function estimateRecords(params: AnalysisState): { min: number; max: numb
     if (science.clinicalSignificance) factor *= 0.5;
     if (science.peerReviewedOnly) factor *= 0.7;
     if (science.dateFrom || science.dateTo) factor *= 0.6;
+    if (science.population) factor *= 0.7;
+    if (science.indication) factor *= 0.7;
   }
+
+  if (params.compound) factor *= 0.9;
+  if (params.categories?.length) factor *= 0.7;
 
   const est = Math.round(baseSum * factor);
   const min = Math.max(1, Math.round(est * 0.85));
@@ -3249,10 +3171,7 @@ function SourcesPicker({
             </span>
             {isVigibase && (
               <span className="text-[10px] font-bold text-amber-600 flex items-center gap-0.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
+                <Lock size={10} />
                 Upgrade
               </span>
             )}
@@ -4931,7 +4850,7 @@ function EditableSentence({
     const peerReviewedText = science.peerReviewedOnly ? "peer-reviewed only" : "include preprints";
 
     return (
-      <div className="text-[14.5px] leading-[1.8] text-gray-700 font-medium my-2 bg-gray-50/50 p-4 rounded-xl border border-dashed border-gray-200">
+      <div className="text-[14.5px] leading-[1.8] text-gray-700 font-medium my-2 bg-gray-50/50 p-4 rounded-xl border border-dashed border-gray-200" style={{ overflowWrap: "break-word", wordBreak: "break-word" }}>
         Review literature on{" "}
         <SentenceToken
           label={topicLabel}
@@ -5154,30 +5073,14 @@ function EditBoard({
         {type !== "genomics" && (
           <div>
             <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Compound / Topic</label>
-            <select
-              value={params.compound}
-              onChange={e => onPatchState({ compound: e.target.value })}
-              className="w-full px-2.5 py-1.5 border rounded-lg text-[12.5px] outline-none"
-              style={{ borderColor: C.border, background: "#fff" }}
-            >
-              <option value="">-- Choose Compound --</option>
-              {DRUGS_LIST.map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
+            <Select value={params.compound} onChange={v => onPatchState({ compound: v })} options={[{label:"-- Choose Compound --",value:""}, ...DRUGS_LIST.map(d => ({label:d, value:d}))]} />
           </div>
         )}
         
         {type === "genomics" && (
           <div>
             <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Gene of Interest</label>
-            <select
-              value={science.gene || ""}
-              onChange={e => onPatchState({ science: { ...science, gene: e.target.value } })}
-              className="w-full px-2.5 py-1.5 border rounded-lg text-[12.5px] outline-none"
-              style={{ borderColor: C.border, background: "#fff" }}
-            >
-              <option value="">-- Choose Gene --</option>
-              {GENES_LIST.map(g => <option key={g} value={g}>{g}</option>)}
-            </select>
+            <Select value={science.gene || ""} onChange={v => onPatchState({ science: { ...science, gene: v } })} options={[{label:"-- Choose Gene --",value:""}, ...GENES_LIST.map(g => ({label:g, value:g}))]} />
           </div>
         )}
 
@@ -5253,17 +5156,7 @@ function EditBoard({
             <div>
               <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Signal Detection Stats</label>
               <div className="flex items-center gap-3">
-                <select
-                  value={a.signalDetection.method}
-                  onChange={e => onPatchState({ advanced: { ...a, signalDetection: { ...a.signalDetection, method: e.target.value as any } } })}
-                  className="px-2 py-1.5 border rounded text-[12.5px] outline-none"
-                  style={{ borderColor: C.border }}
-                >
-                  <option value="PRR">PRR</option>
-                  <option value="ROR">ROR</option>
-                  <option value="BCPNN">BCPNN</option>
-                  <option value="IC">IC</option>
-                </select>
+                <Select value={a.signalDetection.method} onChange={v => onPatchState({ advanced: { ...a, signalDetection: { ...a.signalDetection, method: v as any } } })} options={["PRR","ROR","BCPNN","IC"]} />
                 <div className="flex items-center gap-1">
                   <span className="text-[12px] text-gray-500">Threshold:</span>
                   <input
@@ -5319,16 +5212,7 @@ function EditBoard({
             </div>
             <div>
               <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Population Ancestry</label>
-              <select
-                value={science.population || "all populations"}
-                onChange={e => onPatchState({ science: { ...science, population: e.target.value } })}
-                className="w-full px-2.5 py-1.5 border rounded-lg text-[12.5px] outline-none"
-                style={{ borderColor: C.border }}
-              >
-                {["all populations", "East Asian", "European", "African", "Latino", "South Asian"].map(p => (
-                  <option key={p} value={p}>{p === "all populations" ? "All Populations" : p}</option>
-                ))}
-              </select>
+              <Select value={science.population || "all populations"} onChange={v => onPatchState({ science: { ...science, population: v } })} options={[{label:"All Populations",value:"all populations"},{label:"East Asian",value:"East Asian"},{label:"European",value:"European"},{label:"African",value:"African"},{label:"Latino",value:"Latino"},{label:"South Asian",value:"South Asian"}]} />
             </div>
           </>
         )}
@@ -5336,16 +5220,7 @@ function EditBoard({
         {type === "benefit-risk" && (
           <div>
             <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Indication</label>
-            <select
-              value={science.indication || "Melanoma"}
-              onChange={e => onPatchState({ science: { ...science, indication: e.target.value } })}
-              className="w-full px-2.5 py-1.5 border rounded-lg text-[12.5px] outline-none"
-              style={{ borderColor: C.border }}
-            >
-              {["Melanoma", "Atopic dermatitis", "Rheumatoid arthritis", "Type 2 Diabetes", "Plaque psoriasis", "Hypertension", "Pain"].map(ind => (
-                <option key={ind} value={ind}>{ind}</option>
-              ))}
-            </select>
+            <Select value={science.indication || "Melanoma"} onChange={v => onPatchState({ science: { ...science, indication: v } })} options={["Melanoma", "Atopic dermatitis", "Rheumatoid arthritis", "Type 2 Diabetes", "Plaque psoriasis", "Hypertension", "Pain"]} />
           </div>
         )}
 
@@ -5460,6 +5335,7 @@ function PreAnalysisCard({ params, onRun, onEdit, locked, onPatchState }: {
     if (missing.length > 0) {
       setShowConfirmDialog(true);
     } else {
+      setShowEditBoard(false);
       onRun();
     }
   };
@@ -5475,7 +5351,7 @@ function PreAnalysisCard({ params, onRun, onEdit, locked, onPatchState }: {
       <div className="px-4 py-3 space-y-3">
         {locked ? (
           <div className="flex items-center gap-2 text-[12.5px]">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+            <Check size={15} color="#059669" strokeWidth={2.6} />
             <span className="font-semibold" style={{ color: "#047857" }}>Configuration locked</span>
             <span style={{ color: C.text4 }}>· ~{est.min.toLocaleString()}–{est.max.toLocaleString()} est. records</span>
           </div>
@@ -5490,7 +5366,7 @@ function PreAnalysisCard({ params, onRun, onEdit, locked, onPatchState }: {
           </>
         )}
 
-        {showEditBoard && onPatchState && (
+        {!locked && showEditBoard && onPatchState && (
           <EditBoard params={params} onPatchState={onPatchState} />
         )}
 
@@ -5528,17 +5404,13 @@ function PreAnalysisCard({ params, onRun, onEdit, locked, onPatchState }: {
               className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-semibold text-white"
               style={{ background: "linear-gradient(135deg, #059669, #0d9488)", boxShadow: "0 2px 8px rgba(5,150,105,0.22)" }}>
               Run Analysis
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
+              <ArrowRight size={13} stroke="white" strokeWidth={2.5} />
             </motion.button>
             <button onClick={() => setShowEditBoard(b => !b)}
               className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-medium transition-colors"
               style={{ border: `1px solid ${C.border}`, color: C.text3, background: "transparent" }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 256 256">
-                <path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z"/>
-              </svg>
-              {showEditBoard ? "Collapse" : "Edit"}
+              <Pencil size={13} />
+              {showEditBoard ? "Collapse" : "Advanced Parameters"}
             </button>
           </>
         )}
@@ -5548,12 +5420,12 @@ function PreAnalysisCard({ params, onRun, onEdit, locked, onPatchState }: {
 }
 
 // ─── Shimmer "thinking" text ─────────────────────────────────────
-function ShimmerText({ children, size = 13 }: { children: React.ReactNode; size?: number }) {
+function ShimmerText({ children, size = 13, color }: { children: React.ReactNode; size?: number; color?: string }) {
   return (
     <span style={{
       display: "inline-block", fontSize: size, fontWeight: 600,
       fontFamily: "Manrope, sans-serif",
-      background: "linear-gradient(90deg, #222831 0%, #222831 25%, #8090a6 40%, #e8edf5 50%, #8090a6 60%, #222831 75%, #222831 100%)",
+      background: color ? `linear-gradient(90deg, ${color} 0%, ${color} 25%, ${color}cc 40%, ${color}80 50%, ${color}cc 60%, ${color} 75%, ${color} 100%)` : "linear-gradient(90deg, #222831 0%, #222831 25%, #8090a6 40%, #e8edf5 50%, #8090a6 60%, #222831 75%, #222831 100%)",
       backgroundSize: "200% 100%",
       WebkitBackgroundClip: "text", backgroundClip: "text",
       WebkitTextFillColor: "transparent",
@@ -5707,9 +5579,7 @@ function ThoughtDisclosure({ thought }: { thought: AgentThought }) {
   return (
     <div className="mt-2">
       <button onClick={() => setOpen(o => !o)} className="flex items-center gap-1.5 py-1 text-left">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256" style={{ color: C.text4 }}>
-          <path d="M176,116a12,12,0,1,1-12-12A12,12,0,0,1,176,116ZM92,104a12,12,0,1,0,12,12A12,12,0,0,0,92,104Zm140,24A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-16,0A88,88,0,1,0,51.81,172.06a8,8,0,0,1,.66,6.54L40,216,77.4,203.53a8,8,0,0,1,6.54.66A88,88,0,0,0,216,128Z" />
-        </svg>
+        <MessageCircle size={14} style={{ color: C.text4 }} />
         <span className="text-[12px] font-medium" style={{ color: C.text3 }}>Thought process · {toolCount} tool{toolCount === 1 ? "" : "s"}</span>
         <motion.svg animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}
           xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 256 256" style={{ color: C.text4 }}>
@@ -5738,9 +5608,7 @@ function StepIcon({ status }: { status: StepStatus }) {
         transition={{ type: "spring", stiffness: 500, damping: 28 }}
         className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
         style={{ background: "#059669" }}>
-        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="1.5,6 4.5,9 10.5,3" />
-        </svg>
+        <Check size={10} stroke="white" strokeWidth={2.5} />
       </motion.div>
     );
   }
@@ -5853,7 +5721,7 @@ function TimelineTrace({ agents, started, doneArr, readOnly, onTick, onMarkDone 
                     <span className="text-[13px] font-bold" style={{ color: agent.color }}>{agent.name}</span>
                     <span className="text-[11px]" style={{ color: C.text4 }}>{agent.role}</span>
                     {isActive && (
-                      <ShimmerText size={10}>working…</ShimmerText>
+                      <ShimmerText size={10} color={agent.color}>working…</ShimmerText>
                     )}
                     {isDone && (
                       <span className="text-[11px] font-medium ml-0.5" style={{ color: C.text5 }}>
@@ -5900,15 +5768,7 @@ function TimelineTrace({ agents, started, doneArr, readOnly, onTick, onMarkDone 
                                     {isDoneStep ? (
                                       <div className="w-1.5 h-1.5 rounded-full" style={{ background: agent.color, opacity: 0.75 }} />
                                     ) : isCurrent ? (
-                                      <svg width="10" height="10" viewBox="0 0 24 24"
-                                        style={{ animation: "spin 0.9s linear infinite", display: "block" }}>
-                                        <circle cx="12" cy="12" r="9" fill="none"
-                                          stroke={`${agent.color}30`} strokeWidth="3" />
-                                        <circle cx="12" cy="12" r="9" fill="none"
-                                          stroke={agent.color} strokeWidth="3"
-                                          strokeDasharray="18 39" strokeLinecap="round"
-                                          strokeDashoffset="0" />
-                                      </svg>
+                                      <LoaderCircle size={10} stroke={agent.color} strokeWidth={3} style={{ animation: "spin 0.9s linear infinite", display: "block" }} />
                                     ) : (
                                       <div className="w-1.5 h-1.5 rounded-full" style={{ background: C.border }} />
                                     )}
@@ -5942,10 +5802,7 @@ function TimelineTrace({ agents, started, doneArr, readOnly, onTick, onMarkDone 
                         className="flex items-center gap-1 mt-2 text-[11.5px] font-medium transition-colors"
                         style={{ color: peeking[i] ? C.brand : C.text4 }}>
                         {peeking[i] ? "See more" : "Collapse"}
-                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 256 256"
-                          style={{ transform: peeking[i] ? "none" : "rotate(180deg)", transition: "transform 0.15s" }}>
-                          <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/>
-                        </svg>
+                        <ChevronUp size={11} style={{ transform: peeking[i] ? "none" : "rotate(180deg)", transition: "transform 0.15s" }} />
                       </button>
                     </div>
                   </div>
@@ -6026,9 +5883,7 @@ function PlanningTrace({ onComplete, onActiveAgents, onTick, readOnly = false }:
               {phiCleared && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold"
                   style={{ background: "#dcfce7", color: "#15803d" }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 256 256">
-                    <path d="M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z" />
-                  </svg>
+                  <CheckCircle size={11} />
                   PHI cleared
                 </span>
               )}
@@ -6079,21 +5934,7 @@ function SignalTableRow({ row, i, isLast }: { row: SignalRow; i: number; isLast:
         style={{ gridTemplateColumns: "2fr 1fr 1.5fr 1fr 1.5fr" }}
       >
         <span className="text-[13.5px] font-semibold flex items-center gap-1.5" style={{ color: C.text2 }}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="10"
-            height="10"
-            fill="currentColor"
-            viewBox="0 0 256 256"
-            style={{
-              color: C.text4,
-              transform: expanded ? "rotate(90deg)" : "none",
-              transition: "transform 0.15s",
-              flexShrink: 0
-            }}
-          >
-            <path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z" />
-          </svg>
+<ChevronRight size={10} style={{ color: C.text4, transform: expanded ? "rotate(90deg)" : "none", transition: "transform 0.15s", flexShrink: 0 }} />
           {row.event}
         </span>
         <span className="text-[13.5px] font-bold" style={{ color: C.text1 }}>{row.prr}</span>
@@ -6226,10 +6067,7 @@ function ReferenceItem({ item, isLast, highlight, refEl }: {
               <button onClick={() => setExpanded(v => !v)}
                 className="flex items-center gap-1.5 mt-2.5 text-[12px] font-medium transition-colors"
                 style={{ color: C.text3 }}>
-                <motion.svg animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}
-                  xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 256 256">
-                  <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z" />
-                </motion.svg>
+<motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }} style={{ display: "inline-flex" }}><ChevronDown size={12} /></motion.div>
                 Evidence breakdown
               </button>
               <AnimatePresence>
@@ -6311,7 +6149,7 @@ function CitationChip({ n, strength, onClick }: {
       style={{
         background: c.surface, color: c.text, fontFamily: "Manrope, sans-serif",
         fontSize: 10.5, fontWeight: 600, lineHeight: 1, padding: "2px 5px",
-        borderRadius: 6, minWidth: 16, verticalAlign: "super",
+        borderRadius: 4, minWidth: 16, verticalAlign: "super",
       }}>
       {n}
     </button>
@@ -6526,18 +6364,13 @@ function DrugInfoCard({ drug, refs }: { drug: DrugInfo; refs: Reference[] }) {
         style={{ borderBottom: open ? `1px solid ${C.border}` : "none", background: C.pageBg }}>
         <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
           style={{ background: C.brandSoft }}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill={C.brandText} viewBox="0 0 256 256">
-            <path d="M188.69,67.32a52,52,0,0,0-73.54,0L67.32,115.15a52,52,0,1,0,73.54,73.54l47.83-47.83a52,52,0,0,0,0-73.54ZM78.63,177.37a36,36,0,0,1,0-50.92L100,105.09,150.91,156l-21.37,21.37a36,36,0,0,1-50.91,0ZM177.37,128.45,162.22,143.6,111.31,92.69,126.46,77.54a36,36,0,1,1,50.91,50.91Z" />
-          </svg>
+          <Link size={16} />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[14px] font-bold" style={{ color: C.text1 }}>{drug.name}</p>
           <p className="text-[12px]" style={{ color: C.text4 }}>{drug.className}</p>
         </div>
-        <motion.svg animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}
-          xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256" style={{ color: C.text4 }}>
-          <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z" />
-        </motion.svg>
+<motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }} style={{ display: "inline-flex", color: C.text4 }}><ChevronDown size={16} /></motion.div>
       </button>
       <AnimatePresence initial={false}>
         {open && (
@@ -6608,9 +6441,7 @@ function FeedbackBar({
       {isSurveillance && (
         isSigned ? (
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
+            <Check size={14} />
             E-Signed (21 CFR Part 11)
           </div>
         ) : (
@@ -6619,9 +6450,7 @@ function FeedbackBar({
             className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12.5px] font-bold cursor-pointer transition-all hover:opacity-90 border-none text-white"
             style={{ background: C.brand }}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-            </svg>
+            <Pen size={14} />
             E-Sign Report
           </button>
         )
@@ -6629,53 +6458,37 @@ function FeedbackBar({
       
       <div onClick={onShare} className="flex items-center gap-2 px-3.5 py-2 rounded-full text-[12.5px] font-medium cursor-pointer transition-all hover:opacity-80"
         style={{ background: C.brandSoft, color: C.brandText }}>
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256">
-          <path d="M176,156a27.76,27.76,0,0,0-16.42,5.32L99.79,126.49a28,28,0,0,0,0-13L159.58,78.7a28,28,0,1,0-8-13.84L91.79,99.69a28,28,0,1,0,0,56.62l59.79,34.84A28,28,0,1,0,176,156Z" />
-        </svg>
+        <Share2 size={14} />
         Was this helpful? Share it with colleagues
       </div>
       <div className="flex items-center gap-1.5 ml-auto">
         <button aria-label="Helpful" onClick={() => setVote(v => v === "up" ? null : "up")}
           className={iconBtn} style={{ background: vote === "up" ? C.brandSoft : "transparent", color: vote === "up" ? C.brandText : C.text4 }}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" fill="currentColor" viewBox="0 0 256 256">
-            <path d="M234,80.12A24,24,0,0,0,216,72H160V56a40,40,0,0,0-40-40,8,8,0,0,0-7.16,4.42L75.06,96H32a16,16,0,0,0-16,16v88a16,16,0,0,0,16,16H204a24,24,0,0,0,23.82-21l12-96A24,24,0,0,0,234,80.12ZM32,112H72v88H32ZM223.94,97l-12,96a8,8,0,0,1-7.94,7H88V105.89l36.71-73.43A24,24,0,0,1,144,56V80a8,8,0,0,0,8,8h64a8,8,0,0,1,7.94,9Z" />
-          </svg>
+          <ThumbsUp size={17} />
         </button>
         <button aria-label="Not helpful" onClick={() => setVote(v => v === "down" ? null : "down")}
           className={iconBtn} style={{ background: vote === "down" ? "#fee2e2" : "transparent", color: vote === "down" ? "#dc2626" : C.text4 }}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" fill="currentColor" viewBox="0 0 256 256" style={{ transform: "rotate(180deg)" }}>
-            <path d="M234,80.12A24,24,0,0,0,216,72H160V56a40,40,0,0,0-40-40,8,8,0,0,0-7.16,4.42L75.06,96H32a16,16,0,0,0-16,16v88a16,16,0,0,0,16,16H204a24,24,0,0,0,23.82-21l12-96A24,24,0,0,0,234,80.12ZM32,112H72v88H32ZM223.94,97l-12,96a8,8,0,0,1-7.94,7H88V105.89l36.71-73.43A24,24,0,0,1,144,56V80a8,8,0,0,0,8,8h64a8,8,0,0,1,7.94,9Z" />
-          </svg>
+          <ThumbsDown size={17} />
         </button>
         <button aria-label="Copy" onClick={handleCopy}
           className={iconBtn} style={{ background: copied ? C.brandSoft : "transparent", color: copied ? C.brandText : C.text4 }}>
           {copied ? (
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
-              <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z" />
-            </svg>
+            <Check size={16} />
           ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
-              <path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z" />
-            </svg>
+            <Copy size={16} />
           )}
         </button>
         <button aria-label="Download CSV" onClick={onExportCSV}
           className={iconBtn} style={{ background: "transparent", color: C.text4 }}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
-            <path d="M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216ZM160,152a8,8,0,0,1-8,8H104a8,8,0,0,1,0-16h48A8,8,0,0,1,160,152Zm0,32a8,8,0,0,1-8,8H104a8,8,0,0,1,0-16h48A8,8,0,0,1,160,184Z" />
-          </svg>
+          <FileText size={16} />
         </button>
         <button aria-label="Download PDF" onClick={onExportPDF}
           className={iconBtn} style={{ background: "transparent", color: C.text4 }}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
-            <path d="M224,152a8,8,0,0,1-8,8H168v48a8,8,0,0,1-16,0V160H104a8,8,0,0,1,0-16h48V96a8,8,0,0,1,16,0v48h48A8,8,0,0,1,224,152ZM40,80H80V56a8,8,0,0,1,16,0V80h40a8,8,0,0,1,0,16H96v24a8,8,0,0,1-16,0V96H40a8,8,0,0,1,0-16Z" />
-          </svg>
+          <FilePlus size={16} />
         </button>
         <button aria-label="Export to Word" onClick={onExportWord}
           className={iconBtn} style={{ background: "transparent", color: C.text4 }}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
-            <path d="M48,180c0,11,7.18,20,16,20s16-9,16-20-7.18-20-16-20S48,169,48,180ZM216,88V216a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V152a4,4,0,0,1,4-4H60a4,4,0,0,1,4,4v52a4,4,0,0,0,4,4H188a4,4,0,0,0,4-4V96H152a8,8,0,0,1-8-8V48H68a4,4,0,0,0-4,4v52a4,4,0,0,1-4,4H44a4,4,0,0,1-4-4V40A16,16,0,0,1,56,24h96Z" />
-          </svg>
+          <File size={16} />
         </button>
       </div>
     </div>
@@ -6694,9 +6507,7 @@ function SuggestedQuestions({ questions, onAsk }: { questions: string[]; onAsk?:
             className="w-full flex items-center gap-3 py-3 text-left transition-colors hover:bg-gray-50 -mx-2 px-2 rounded-lg"
             style={{ borderBottom: `1px solid ${C.border}` }}>
             <span className="text-[13.5px] flex-1" style={{ color: C.text2 }}>{q}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256" style={{ color: C.brand, flexShrink: 0 }}>
-              <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm40,112H136v32a8,8,0,0,1-16,0V136H88a8,8,0,0,1,0-16h32V88a8,8,0,0,1,16,0v32h32a8,8,0,0,1,0,16Z" />
-            </svg>
+            <CirclePlus size={18} style={{ color: C.brand, flexShrink: 0 }} />
           </button>
         ))}
       </div>
@@ -6720,7 +6531,7 @@ function ChartTooltip({ lines, x, y, visible }: {
       pointerEvents: "none", zIndex: 20,
       background: "#fff",
       border: `1px solid ${C.border}`,
-      borderRadius: 10,
+      borderRadius: 6,
       padding: "10px 14px",
       boxShadow: "0 4px 20px rgba(34,40,49,0.13)",
       minWidth: 160,
@@ -7157,7 +6968,7 @@ function RiskMatrix({ signal, showAxes = true }: { signal: RiskCell; showAxes?: 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 10, paddingLeft: 4 }}>
           {[["#ef4444","Confirmed signal"],["#fb923c","Elevated risk"],["#fef3c7","Moderate zone"],["#dcfce7","Low risk"]].map(([col,lbl]) => (
             <span key={lbl} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: C.text4 }}>
-              <span style={{ width: 12, height: 12, borderRadius: 3, flexShrink: 0, background: col, display: "inline-block" }} />{lbl}
+              <span style={{ width: 12, height: 12, borderRadius: 2, flexShrink: 0, background: col, display: "inline-block" }} />{lbl}
             </span>
           ))}
         </div>
@@ -7173,17 +6984,13 @@ function ArtifactCard({ data, onOpen }: { data: ResultData; onOpen: () => void }
       className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-left transition-all hover:shadow-md mb-3"
       style={{ background: C.card, border: `1px solid ${C.border}`, boxShadow: C.shadowSm }}>
       <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: C.brandSoft }}>
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke={C.brandText} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-          <path d="M4 19l16 0" /><path d="M4 15l4 -6l4 2l4 -5l4 4" />
-        </svg>
+        <TrendingUp size={18} stroke={C.brandText} />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[13.5px] font-semibold truncate" style={{ color: C.text1 }}>{data.artifactTitle}</p>
         <p className="text-[12px]" style={{ color: C.text4 }}>Forest plot · statistics · query · click to open</p>
       </div>
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256" style={{ color: C.text4, flexShrink: 0 }}>
-        <path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z" />
-      </svg>
+      <ChevronRight size={16} style={{ color: C.text4, flexShrink: 0 }} />
     </button>
   );
 }
@@ -7308,7 +7115,7 @@ function AgentsChatPanel() {
               <button key={ag.id} onClick={() => selectAgent(ag.id)}
                 style={{
                   display: "flex", alignItems: "center", gap: 7,
-                  padding: "8px 12px", borderRadius: 10, border: "none", cursor: "pointer",
+                  padding: "8px 12px", borderRadius: 6, border: "none", cursor: "pointer",
                   background: isActive ? ag.color : "transparent",
                   color: isActive ? "#fff" : C.text3,
                   fontSize: 13, fontWeight: 600,
@@ -7319,9 +7126,7 @@ function AgentsChatPanel() {
                 <AgentIcon sides={ag.sides} color={isActive ? "#fff" : ag.color} size={14} />
                 <span>{ag.name}</span>
                 {isActive && typing && (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation: "spin 0.8s linear infinite", flexShrink: 0 }}>
-                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                  </svg>
+                  <LoaderCircle size={12} strokeWidth={2.5} style={{ animation: "spin 0.8s linear infinite", flexShrink: 0 }} />
                 )}
               </button>
             );
@@ -7334,7 +7139,7 @@ function AgentsChatPanel() {
             <AgentIcon sides={activeAgent.sides} color={activeAgent.color} size={20} />
             <div>
               <p style={{ fontSize: 12, fontWeight: 700, color: C.text1, margin: "0 0 4px 0" }}>{activeAgent.name}</p>
-              <p style={{ fontSize: 12, color: C.text3, margin: 0, lineHeight: 1.5 }}>{AGENT_PANEL_INTROS[activeAgentId] ?? "Awaiting input..."}</p>
+              {/* P20: subtitle description removed to avoid duplication with chat bubble */}
             </div>
           </div>
         </div>
@@ -7361,7 +7166,7 @@ function AgentsChatPanel() {
         {typing && (
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <AgentIcon sides={activeAgent.sides} color={activeAgent.color} size={18} />
-            <div style={{ padding: "12px 16px", borderRadius: "4px 14px 14px 14px", background: `${activeAgent.color}08`, border: `1px solid ${activeAgent.color}30` }}>
+            <div style={{ padding: "12px 16px", borderRadius: "2px 10px 10px 10px", background: `${activeAgent.color}08`, border: `1px solid ${activeAgent.color}30` }}>
               <TypingDots color={activeAgent.color} />
             </div>
           </div>
@@ -7404,9 +7209,7 @@ function ChartSourceRow({ chartId, open, onToggle, onOpenAgentThread }: {
   return (
     <div style={{ borderTop: `1px solid ${C.border}` }}>
       <button onClick={onToggle} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4, padding: "7px 16px", background: "transparent", border: "none", cursor: "pointer", color: C.text4, fontSize: 11.5, fontWeight: 600 }}>
-        <motion.svg animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.18 }} xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 256 256">
-          <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z" />
-        </motion.svg>
+<motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.18 }} style={{ display: "inline-flex" }}><ChevronDown size={12} /></motion.div>
         Source
       </button>
       <AnimatePresence initial={false}>
@@ -7419,16 +7222,16 @@ function ChartSourceRow({ chartId, open, onToggle, onOpenAgentThread }: {
               </div>
               <div>
                 <p style={{ fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: C.text4, marginBottom: 6 }}>Raw Source</p>
-                <pre style={{ fontFamily: "Menlo, Courier New, monospace", fontSize: 11, backgroundColor: C.codeBg, color: "#e5e7eb", padding: "8px 12px", borderRadius: 6, overflow: "auto", whiteSpace: "pre-wrap", wordWrap: "break-word", margin: 0, lineHeight: 1.5 }}>
+                <pre style={{ fontFamily: "Menlo, Courier New, monospace", fontSize: 11, backgroundColor: C.codeBg, color: "#e5e7eb", padding: "8px 12px", borderRadius: 4, overflow: "auto", whiteSpace: "pre-wrap", wordWrap: "break-word", margin: 0, lineHeight: 1.5 }}>
                   {src.raw.join('\n')}
                 </pre>
               </div>
             </div>
             <div style={{ padding: "0 16px 14px" }}>
               <button onClick={() => onOpenAgentThread?.(chartId)}
-                style={{ width: "100%", padding: "8px 12px", fontSize: 12.5, fontWeight: 600, borderRadius: 8, border: `1.5px solid ${C.brand}`, background: "transparent", color: C.brand, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                style={{ width: "100%", padding: "8px 12px", fontSize: 12.5, fontWeight: 600, borderRadius: 6, border: `1.5px solid ${C.brand}`, background: "transparent", color: C.brand, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
                 Chat with Medical Reviewer
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+                <ArrowRight size={13} />
               </button>
             </div>
           </motion.div>
@@ -7464,40 +7267,17 @@ function ArtifactPanel({ data, full, onToggleFull, onClose, onOpenAgentThread }:
         <button onClick={onToggleFull} aria-label="Toggle fullscreen" className={iconBtn} style={{ color: C.text3 }}>
           {full ? (
             /* Minimise: two inward-pointing arrows */
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-              <path d="M5 9h4V5" /><path d="M3 3l6 6" />
-              <path d="M19 9h-4V5" /><path d="M21 3l-6 6" />
-              <path d="M5 15h4v4" /><path d="M3 21l6 -6" />
-              <path d="M19 15h-4v4" /><path d="M21 21l-6 -6" />
-            </svg>
+            <Minimize size={16} />
           ) : (
             /* Expand: four outward-pointing arrows */
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-              <path d="M3 7V3h4" /><path d="M3 3l6 6" />
-              <path d="M21 7V3h-4" /><path d="M21 3l-6 6" />
-              <path d="M3 17v4h4" /><path d="M3 21l6 -6" />
-              <path d="M21 17v4h-4" /><path d="M21 21l-6 -6" />
-            </svg>
+            <Maximize size={16} />
           )}
         </button>
-        <button onClick={onClose} aria-label="Close panel" className={iconBtn} style={{ color: C.text3 }}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>
-        </button>
+        <IconButton size="md" onClick={onClose}><X /></IconButton>
       </div>
       {/* tabs — flat segmented control */}
       <div className="flex items-center gap-2 px-5 flex-shrink-0" style={{ height: 52, borderBottom: `1px solid ${C.border}` }}>
-        {(["charts", "agents"] as ArtifactTab[]).map(t => (
-          <button key={t} onClick={() => setTab(t)}
-            style={{
-              padding: "7px 20px", borderRadius: 8, border: "none", cursor: "pointer",
-              fontSize: 14, fontWeight: 600,
-              background: tab === t ? C.brand : C.pageBg,
-              color: tab === t ? "#fff" : C.text3,
-              transition: "background 0.15s, color 0.15s",
-            }}>
-            {t === "charts" ? "Charts" : "Agents"}
-          </button>
-        ))}
+        <Tabs tabs={[{label:"Charts",value:"charts"},{label:"Agents",value:"agents"}]} active={tab} onChange={v => setTab(v as ArtifactTab)} />
       </div>
       {/* body — agents tab gets its own full-height flex layout; charts tab scrolls */}
       {tab === "agents" ? (
@@ -7529,7 +7309,7 @@ function ArtifactPanel({ data, full, onToggleFull, onClose, onOpenAgentThread }:
               <div className="p-4">
                 <p style={{ fontSize: 14, fontWeight: 700, color: C.text1, marginBottom: 2 }}>Hepatotoxicity PRR — FAERS Q4 2022 to Q3 2024</p>
                 <p style={{ fontSize: 12, color: C.text4, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="#ef4444" viewBox="0 0 256 256"><path d="M232,56V120a8,8,0,0,1-16,0V75.31l-82.34,82.35a8,8,0,0,1-11.32,0L96,124.69,29.66,191A8,8,0,0,1,18.34,179.71l72-72a8,8,0,0,1,11.32,0L128,140.69,204.69,64H160a8,8,0,0,1,0-16h64A8,8,0,0,1,232,56Z" /></svg>
+                  <Code2 size={13} color="#ef4444" />
                   Signal has exceeded the ICH E2E threshold for 6 consecutive quarters.
                 </p>
                 <PRRTrendChart onOpenAgentThread={onOpenAgentThread} />
@@ -7587,10 +7367,10 @@ function ArtifactPanel({ data, full, onToggleFull, onClose, onOpenAgentThread }:
           {/* collapsible query / code — charts tab only */}
           <div className="mt-4 rounded-xl overflow-hidden" style={{ border: `1px solid ${C.border}` }}>
             <button onClick={() => setQueryOpen(o => !o)} className="w-full flex items-center gap-2 px-4 py-2.5" style={{ background: C.pageBg }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256" style={{ color: C.text4 }}><path d="M69.12,94.15,28.5,128l40.62,33.85a8,8,0,1,1-10.24,12.29l-48-40a8,8,0,0,1,0-12.29l48-40a8,8,0,0,1,10.24,12.3Zm176,27.7-48-40a8,8,0,1,0-10.24,12.3L227.5,128l-40.62,33.85a8,8,0,1,0,10.24,12.29l48-40a8,8,0,0,0,0-12.29ZM162.73,32.48a8,8,0,0,0-10.25,4.79l-64,176a8,8,0,0,0,4.79,10.26A8.14,8.14,0,0,0,96,224a8,8,0,0,0,7.52-5.27l64-176A8,8,0,0,0,162.73,32.48Z" /></svg>
+              <Copy size={14} color={C.text4} />
               <span style={{ fontSize: 14, fontWeight: 600, flex: 1, textAlign: "left", color: C.text2 }}>Query</span>
-              <span onClick={(e) => { e.stopPropagation(); copyQuery(); }} style={{ fontSize: 12, fontWeight: 600, padding: "3px 8px", borderRadius: 6, color: copied ? C.brandText : C.text4, background: copied ? C.brandSoft : "transparent" }}>{copied ? "Copied ✓" : "Copy"}</span>
-              <motion.svg animate={{ rotate: queryOpen ? 180 : 0 }} transition={{ duration: 0.2 }} xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 256 256" style={{ color: C.text4 }}><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z" /></motion.svg>
+              <span onClick={(e) => { e.stopPropagation(); copyQuery(); }} style={{ fontSize: 12, fontWeight: 600, padding: "3px 8px", borderRadius: 4, color: copied ? C.brandText : C.text4, background: copied ? C.brandSoft : "transparent" }}>{copied ? "Copied ✓" : "Copy"}</span>
+<motion.div animate={{ rotate: queryOpen ? 180 : 0 }} transition={{ duration: 0.2 }} style={{ display: "inline-flex", color: C.text4 }}><ChevronDown size={12} /></motion.div>
             </button>
             <AnimatePresence initial={false}>
               {queryOpen && (
@@ -7688,12 +7468,10 @@ function ResultTabs({ data, onAsk, stream = false, onTick, onOpenArtifact, onSha
                 padding: "10px 14px",
                 backgroundColor: "#f0fdf4",
                 border: "1px solid #bbf7d0",
-                borderRadius: 10,
+                borderRadius: 6,
                 marginBottom: 12
               }} className="animate-fadeIn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                  <rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                </svg>
+                <Mail size={16} stroke="#16a34a" strokeWidth={2.5} style={{ flexShrink: 0 }} />
                 <span style={{ fontSize: 12, color: "#15803d", fontWeight: 650 }}>
                   These reports have also been sent to your email with all the necessary details.
                 </span>
@@ -7702,16 +7480,16 @@ function ResultTabs({ data, onAsk, stream = false, onTick, onOpenArtifact, onSha
             {data.params?.isSurveillance && (
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16, alignItems: "center" }} className="animate-fadeIn">
                 <span style={{ fontSize: 10.5, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Delta vs Last Run:</span>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: "#ecfdf5", color: "#047857", border: "1px solid #a7f3d0" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "#ecfdf5", color: "#047857", border: "1px solid #a7f3d0" }}>
                   <span>↑ {data.params.compound === "Pembrolizumab" ? "2 New" : "0 New"}</span>
                 </span>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: "#fffbeb", color: "#d97706", border: "1px solid #fde68a" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "#fffbeb", color: "#d97706", border: "1px solid #fde68a" }}>
                   <span>↑ {data.params.compound === "Pembrolizumab" ? "1 Rising" : "0 Rising"}</span>
                 </span>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: "#f8fafc", color: "#475569", border: "1px solid #e2e8f0" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "#f8fafc", color: "#475569", border: "1px solid #e2e8f0" }}>
                   <span>→ {data.params.compound === "Pembrolizumab" ? "3 Stable" : "2 Stable"}</span>
                 </span>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, padding: "2px 8px", borderRadius: 6, background: "#ecfdf5", color: "#047857", border: "1px solid #a7f3d0" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "#ecfdf5", color: "#047857", border: "1px solid #a7f3d0" }}>
                   <span>↓ 0 Declining</span>
                 </span>
               </div>
@@ -7762,11 +7540,11 @@ function UserBubble({ text, agentThread }: { text: string; agentThread?: string 
     <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} style={{ display: "flex", justifyContent: "flex-end", marginBottom: 20 }}>
       <div style={{ maxWidth: "75%", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
         {threadAgent && (
-          <span style={{ fontSize: 11, fontWeight: 700, color: threadAgent.color, background: `${threadAgent.color}18`, border: `1px solid ${threadAgent.color}40`, borderRadius: 20, padding: "2px 8px", letterSpacing: "0.01em" }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: threadAgent.color, background: `${threadAgent.color}18`, border: `1px solid ${threadAgent.color}40`, borderRadius: 12, padding: "2px 8px", letterSpacing: "0.01em" }}>
             @{threadAgent.name}
           </span>
         )}
-        <div style={{ padding: "10px 16px", borderRadius: "18px 18px 4px 18px", fontSize: 15, lineHeight: 1.6, background: C.brandSoft, border: "1px solid #86efac", color: C.brandText, fontFamily: "Manrope, sans-serif" }}>
+        <div style={{ padding: "10px 16px", borderRadius: "12px 12px 2px 12px", fontSize: 15, lineHeight: 1.6, background: C.brandSoft, border: "1px solid #86efac", color: C.brandText, fontFamily: "Manrope, sans-serif" }}>
           {text}
         </div>
       </div>
@@ -7792,7 +7570,7 @@ function PermissionRequestBox({
   const signedAt = new Date().toISOString();
 
   return (
-    <div style={{ border: `1.5px solid ${C.border}`, borderRadius: 14, padding: 16, background: "#fff", marginTop: 8 }}>
+    <div style={{ border: `1.5px solid ${C.border}`, borderRadius: 10, padding: 16, background: "#fff", marginTop: 8 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
         <AgentIcon sides={ag.sides} color={ag.color} size={22} />
         <div>
@@ -7806,15 +7584,15 @@ function PermissionRequestBox({
       {!locked && (
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={() => setShowSignModal(true)}
-            style={{ flex: 1, padding: "8px 12px", fontSize: 12.5, fontWeight: 600, borderRadius: 8, border: "none", background: C.brand, color: "#fff", cursor: "pointer" }}>
+            style={{ flex: 1, padding: "8px 12px", fontSize: 12.5, fontWeight: 600, borderRadius: 6, border: "none", background: C.brand, color: "#fff", cursor: "pointer" }}>
             Approve
           </button>
           <button onClick={() => onComponentAction?.("__deny__", {})}
-            style={{ flex: 1, padding: "8px 12px", fontSize: 12.5, fontWeight: 600, borderRadius: 8, border: `1.5px solid #fca5a5`, background: "transparent", color: "#dc2626", cursor: "pointer" }}>
+            style={{ flex: 1, padding: "8px 12px", fontSize: 12.5, fontWeight: 600, borderRadius: 6, border: `1.5px solid #fca5a5`, background: "transparent", color: "#dc2626", cursor: "pointer" }}>
             Deny
           </button>
           <button onClick={() => onComponentAction?.("__other__", {})}
-            style={{ flex: 1, padding: "8px 12px", fontSize: 12.5, fontWeight: 600, borderRadius: 8, border: `1.5px solid ${C.border}`, background: "transparent", color: C.text3, cursor: "pointer" }}>
+            style={{ flex: 1, padding: "8px 12px", fontSize: 12.5, fontWeight: 600, borderRadius: 6, border: `1.5px solid ${C.border}`, background: "transparent", color: C.text3, cursor: "pointer" }}>
             Other
           </button>
         </div>
@@ -7826,7 +7604,7 @@ function PermissionRequestBox({
           backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16
         }}>
           <div style={{
-            background: "#fff", borderRadius: 20, maxWidth: 420, width: "100%", padding: 24,
+            background: "#fff", borderRadius: 12, maxWidth: 420, width: "100%", padding: 24,
             boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)"
           }}>
             <h3 style={{ fontSize: 17, fontWeight: 700, color: C.text1, marginBottom: 12 }}>Attest & Sign Report</h3>
@@ -7835,7 +7613,7 @@ function PermissionRequestBox({
             </p>
             
             <div style={{
-              background: "#f8fafc", border: `1px solid ${C.border}`, borderRadius: 12, padding: 16,
+              background: "#f8fafc", border: `1px solid ${C.border}`, borderRadius: 6, padding: 16,
               display: "flex", flexDirection: "column", alignItems: "center", gap: 8, marginBottom: 18, minHeight: 80, justifyContent: "center"
             }}>
               <span style={{ fontSize: 11, color: C.text4, textTransform: "uppercase", letterSpacing: 0.5 }}>Reviewer Signature</span>
@@ -7843,12 +7621,10 @@ function PermissionRequestBox({
                 <img src={sigText} alt="Reviewer Signature" style={{ maxHeight: 60, maxWidth: "100%", objectFit: "contain" }} />
               ) : (
                 <label style={{
-                  border: `2px dashed ${C.border}`, borderRadius: 12, padding: "16px", width: "100%",
+                  border: `2px dashed ${C.border}`, borderRadius: 6, padding: "16px", width: "100%",
                   textAlign: "center", cursor: "pointer", background: "#fff", display: "flex", flexDirection: "column", alignItems: "center", gap: 8
                 }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.text3} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-                  </svg>
+                  <Upload size={22} stroke={C.text3} />
                   <span style={{ fontSize: 12.5, color: C.text2, fontWeight: 600 }}>Upload signature image</span>
                   <span style={{ fontSize: 11, color: C.text4 }}>PNG, JPG, or SVG mark required before signing</span>
                   <input type="file" accept="image/png,image/jpeg,image/svg+xml" style={{ display: "none" }}
@@ -7881,31 +7657,13 @@ function PermissionRequestBox({
               Timestamp: <span style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", color: C.text2 }}>{signedAt}</span>
             </div>
 
-            <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", marginBottom: 20 }}>
-              <input type="checkbox" checked={attested} onChange={(e) => setAttested(e.target.checked)} disabled={!hasUploadedSignature} style={{ marginTop: 3, accentColor: C.brand }} />
-              <span style={{ fontSize: 12.5, color: C.text2, lineHeight: 1.4 }}>
-                I, Raya Surya, apply my uploaded signature to authorize this report and confirm my intent to sign under 21 CFR Part 11.
-              </span>
-            </label>
+            <div style={{ marginBottom: 20 }}>
+              <Checkbox checked={attested} onChange={v => setAttested(v)} disabled={!hasUploadedSignature} label="I, Raya Surya, apply my uploaded signature to authorize this report and confirm my intent to sign under 21 CFR Part 11." />
+            </div>
 
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => setShowSignModal(false)}
-                style={{ flex: 1, padding: "10px 16px", fontSize: 13, fontWeight: 600, borderRadius: 10, border: `1px solid ${C.border}`, background: "#fff", color: C.text2, cursor: "pointer" }}>
-                Cancel
-              </button>
-              <button
-                disabled={!hasUploadedSignature || !attested}
-                onClick={() => {
-                  setShowSignModal(false);
-                  onComponentAction?.("__approve__", {});
-                }}
-                style={{
-                  flex: 1, padding: "10px 16px", fontSize: 13, fontWeight: 600, borderRadius: 10, border: "none",
-                  background: hasUploadedSignature && attested ? C.brand : "#cbd5e1", color: "#fff",
-                  cursor: hasUploadedSignature && attested ? "pointer" : "not-allowed"
-                }}>
-                Sign & Approve
-              </button>
+              <Button variant="secondary" onClick={() => setShowSignModal(false)} style={{ flex: 1 }}>Cancel</Button>
+              <Button variant="primary" disabled={!hasUploadedSignature || !attested} onClick={() => { setShowSignModal(false); onComponentAction?.("__approve__", {}); }} style={{ flex: 1 }}>Sign & Approve</Button>
             </div>
           </div>
         </div>
@@ -8238,12 +7996,13 @@ function parseQueryToConfig(query: string): AnalysisState {
 }
 
 // ─── Chat Screen (step-gated Safety Signal Detection flow) ────────
-function ChatScreen({ initialMessage, onActivity, onShare, panelFull, setPanelFull }: {
+function ChatScreen({ initialMessage, onActivity, onShare, panelFull, setPanelFull, onPanelChange }: {
   initialMessage: string;
   onActivity?: (m: Record<string, AgentActivity>) => void;
   onShare?: () => void;
   panelFull: boolean;
   setPanelFull: React.Dispatch<React.SetStateAction<boolean>>;
+  onPanelChange?: (active: boolean) => void;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [typing, setTyping] = useState<string | null>(null);
@@ -8384,6 +8143,7 @@ function ChatScreen({ initialMessage, onActivity, onShare, panelFull, setPanelFu
         // Load mock conversation instantly — no streaming animation
         setMessages(mockConv.messages.map(m => ({ ...m, noStream: true, locked: true })));
         setArtifact(mockConv.artifact);
+        onPanelChange?.(!!mockConv.artifact);
         nextStepRef.current = mockConv.messages.length;
       } else {
         // Normal flow: run describe-parser immediately on the custom query / prompt chip
@@ -8651,7 +8411,8 @@ function ChatScreen({ initialMessage, onActivity, onShare, panelFull, setPanelFu
             id: rid, type: "agent", agent: "medical",
             text: replyText,
             locked: true,
-            agentThread: "medical"
+            agentThread: "medical",
+            // TODO(ds): wire result-tabs component with DS token for Pembrolizumab drug/ref data
           }]);
         }, 1200);
       } else if (isAtorva) {
@@ -8675,7 +8436,8 @@ function ChatScreen({ initialMessage, onActivity, onShare, panelFull, setPanelFu
             id: rid, type: "agent", agent: "medical",
             text: replyText,
             locked: true,
-            agentThread: "medical"
+            agentThread: "medical",
+            // TODO(ds): wire result-tabs component with DS token for Atorvastatin drug/ref data
           }]);
         }, 1200);
       } else if (threadAgent === "medical") {
@@ -8799,7 +8561,7 @@ function ChatScreen({ initialMessage, onActivity, onShare, panelFull, setPanelFu
         {artifact && (
           <ArtifactPanel key="artifact" data={artifact} full={panelFull}
             onToggleFull={() => setPanelFull(f => !f)}
-            onClose={() => { setArtifact(null); setPanelFull(false); }}
+            onClose={() => { setArtifact(null); setPanelFull(false); onPanelChange?.(false); }}
             onOpenAgentThread={handleOpenAgentThread} />
         )}
       </AnimatePresence>
@@ -8865,28 +8627,26 @@ function UpgradeProModal({ isOpen, onClose, showToast }: UpgradeProModalProps): 
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(15,23,42,0.40)", backdropFilter: "blur(4px)", padding: 16 }}>
-      <div style={{ background: "#fff", borderRadius: 24, maxWidth: 960, width: "100%", padding: 30, boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", border: "1px solid #fed7aa", maxHeight: "92vh", overflowY: "auto" }}>
+      <div style={{ background: "#fff", borderRadius: 12, maxWidth: 960, width: "100%", padding: 30, boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", border: "1px solid #fed7aa", maxHeight: "92vh", overflowY: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 18, marginBottom: 24 }}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "#b45309", marginBottom: 6 }}>WinnowAI licensing</div>
             <h3 style={{ fontSize: 24, fontWeight: 800, color: "#0f172a", margin: "0 0 8px 0" }}>Plans & Pricing</h3>
             <p style={{ fontSize: 13.5, color: C.text3, lineHeight: 1.5, margin: 0, maxWidth: 620 }}>Move from a portfolio sandbox to governed pharmacovigilance operations with continuous surveillance, audit trails, and validated exports.</p>
           </div>
-          <button onClick={onClose} aria-label="Close plans" style={{ width: 34, height: 34, borderRadius: 10, border: "none", background: "#fff7ed", fontSize: 20, color: "#92400e", cursor: "pointer", flexShrink: 0 }}>&times;</button>
+          <button onClick={onClose} aria-label="Close plans" style={{ width: 34, height: 34, borderRadius: 6, border: "none", background: "#fff7ed", fontSize: 20, color: "#92400e", cursor: "pointer", flexShrink: 0 }}>&times;</button>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, marginBottom: 18 }}>
           {plans.map(plan => {
             const isTeam = plan.name === "Team";
             return (
-              <div key={plan.name} style={{ border: isTeam ? "2px solid #f59e0b" : "1px solid #fed7aa", borderRadius: 18, padding: 18, backgroundColor: isTeam ? "#fffbeb" : "#fff", position: "relative", display: "flex", flexDirection: "column", minHeight: 472 }}>
-                {isTeam && <span style={{ position: "absolute", top: -11, right: 16, backgroundColor: "#d97706", color: "#fff", fontSize: 10, fontWeight: 800, padding: "3px 9px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>Recommended</span>}
-                <div style={{ width: 34, height: 34, borderRadius: 12, border: "1px solid #fcd34d", background: "linear-gradient(135deg, #fff7ed, #fffbeb)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
-                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 21V10" />
-                    <path d="M12 10C8 10 6 8 6 4c4 0 6 2 6 6Z" />
-                    <path d="M12 14c4 0 6-2 6-6-4 0-6 2-6 6Z" />
-                  </svg>
+              <div key={plan.name} style={{ border: isTeam ? "2px solid #f59e0b" : "1px solid #fed7aa", borderRadius: 12, padding: 18, backgroundColor: isTeam ? "#fffbeb" : "#fff", position: "relative", display: "flex", flexDirection: "column", minHeight: 472 }}>
+                {isTeam && <span style={{ position: "absolute", top: -11, right: 16, backgroundColor: "#d97706", color: "#fff", fontSize: 10, fontWeight: 800, padding: "3px 9px", borderRadius: 4, textTransform: "uppercase", letterSpacing: "0.04em" }}>Recommended</span>}
+                <div style={{ width: 34, height: 34, borderRadius: 6, border: "1px solid #fcd34d", background: "linear-gradient(135deg, #fff7ed, #fffbeb)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+                  {plan.name === "Individual" && <User size={19} stroke="#b45309" strokeWidth={1.8} />}
+                  {plan.name === "Team" && <Users size={19} stroke="#b45309" strokeWidth={1.8} />}
+                  {plan.name === "Enterprise" && <Building2 size={19} stroke="#b45309" strokeWidth={1.8} />}
                 </div>
                 <h4 style={{ fontSize: 26, fontWeight: 700, color: "#0f172a", margin: "0 0 10px 0" }}>{plan.name}</h4>
                 <div style={{ marginBottom: 10 }}>
@@ -8905,16 +8665,14 @@ function UpgradeProModal({ isOpen, onClose, showToast }: UpgradeProModalProps): 
                   <li style={{ fontWeight: 800, color: "#0f172a" }}>{plan.intro}</li>
                   {plan.features.map(feature => (
                     <li key={feature} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#d97706" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: 2, flexShrink: 0 }}>
-                        <path d="M16 5 8 15l-4-4" />
-                      </svg>
+                      <Check size={14} stroke="#d97706" strokeWidth={2.4} style={{ marginTop: 2, flexShrink: 0 }} />
                       <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
-                <div className={plan.disabled ? undefined : "upgrade-ring"} style={{ width: "100%", borderRadius: 13, marginBottom: 16 }}>
+                <div className={plan.disabled ? undefined : "upgrade-ring"} style={{ width: "100%", borderRadius: 10, marginBottom: 16 }}>
                   <button disabled={plan.disabled} onClick={() => handlePlanAction(plan.name)}
-                    style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: plan.disabled ? "1px solid #fed7aa" : "none", background: plan.disabled ? "#fff7ed" : "linear-gradient(135deg, #d97706, #f59e0b)", color: plan.disabled ? "#92400e" : "#fff", fontSize: 13, fontWeight: 800, cursor: plan.disabled ? "default" : "pointer" }}>
+                    style={{ width: "100%", padding: "11px 14px", borderRadius: 6, border: plan.disabled ? "1px solid #fed7aa" : "none", background: plan.disabled ? "#fff7ed" : "linear-gradient(135deg, #d97706, #f59e0b)", color: plan.disabled ? "#92400e" : "#fff", fontSize: 13, fontWeight: 800, cursor: plan.disabled ? "default" : "pointer" }}>
                     {plan.cta}
                   </button>
                 </div>
@@ -8926,7 +8684,6 @@ function UpgradeProModal({ isOpen, onClose, showToast }: UpgradeProModalProps): 
 
         <div style={{ borderTop: "1px solid #fed7aa", paddingTop: 14, display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
           <p style={{ fontSize: 11.5, color: C.text4, margin: 0 }}>*Usage limits apply. Plans and pricing are set at the organizational license level.</p>
-          <button onClick={() => handlePlanAction("Enterprise")} style={{ border: "1px solid #f59e0b", background: "#fff7ed", color: "#92400e", borderRadius: 10, padding: "8px 12px", fontSize: 12.5, fontWeight: 800, cursor: "pointer" }}>Contact license admin</button>
         </div>
       </div>
     </div>
@@ -8957,7 +8714,7 @@ function ExportReportModal({ isOpen, onClose, showToast }: ExportReportModalProp
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(15,23,42,0.40)", backdropFilter: "blur(4px)", padding: 16 }}>
-      <div style={{ background: "#ffffff", borderRadius: 24, maxWidth: 520, width: "100%", padding: 32, boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", border: "1px solid #cbd5e1", display: "flex", flexDirection: "column", gap: 24 }}>
+      <div style={{ background: "#ffffff", borderRadius: 12, maxWidth: 520, width: "100%", padding: 32, boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", border: "1px solid #cbd5e1", display: "flex", flexDirection: "column", gap: 24 }}>
         
         {/* Header */}
         <div style={{ display: "flex", alignItems: "start", gap: 8, justifyContent: "space-between" }}>
@@ -8966,13 +8723,10 @@ function ExportReportModal({ isOpen, onClose, showToast }: ExportReportModalProp
             <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>Select a compliance-approved destination.</p>
           </div>
           <button onClick={onClose} type="button" aria-label="Close"
-            style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", color: "#94a3b8", transition: "all 0.15s" }}
+            style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 6, border: "none", background: "transparent", cursor: "pointer", color: "#94a3b8", transition: "all 0.15s" }}
             onMouseEnter={e => (e.currentTarget.style.background = "#f1f5f9")}
             onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="15" y1="5" x2="5" y2="15"></line>
-              <line x1="5" y1="5" x2="15" y2="15"></line>
-            </svg>
+            <X size={20} />
           </button>
         </div>
 
@@ -8985,7 +8739,7 @@ function ExportReportModal({ isOpen, onClose, showToast }: ExportReportModalProp
               onClick={() => setExportMode("pdf")}
               style={{
                 display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "12px 16px",
-                border: "1px solid #e2e8f0", borderBottom: "none", borderRadius: "12px 12px 0 0",
+                border: "1px solid #e2e8f0", borderBottom: "none", borderRadius: "8px 8px 0 0",
                 textAlign: "left", cursor: "pointer", transition: "colors 0.15s",
                 backgroundColor: exportMode === "pdf" ? "#f8fafc" : "#ffffff"
               }}
@@ -8993,7 +8747,7 @@ function ExportReportModal({ isOpen, onClose, showToast }: ExportReportModalProp
               onMouseLeave={e => { if (exportMode !== "pdf") e.currentTarget.style.backgroundColor = "#ffffff"; }}
             >
               <div style={{ width: 20, height: 20, color: "#64748b", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <FileText size={18} />
               </div>
               <div style={{ flex: 1 }}>
                 <p style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: "#0f172a" }}>Export as PDF</p>
@@ -9001,7 +8755,7 @@ function ExportReportModal({ isOpen, onClose, showToast }: ExportReportModalProp
               </div>
               {exportMode === "pdf" && (
                 <div style={{ width: 20, height: 20, color: "#059669", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M15.188 5.11a.5.5 0 0 1 .752.626l-.056.084-7.5 9a.5.5 0 0 1-.738.033l-3.5-3.5-.064-.078a.501.501 0 0 1 .693-.693l.078.064 3.113 3.113 7.15-8.58z"></path></svg>
+                  <Check size={20} fill="currentColor" />
                 </div>
               )}
             </button>
@@ -9019,7 +8773,7 @@ function ExportReportModal({ isOpen, onClose, showToast }: ExportReportModalProp
               onMouseLeave={e => { if (exportMode !== "ectd") e.currentTarget.style.backgroundColor = "#ffffff"; }}
             >
               <div style={{ width: 20, height: 20, color: "#64748b", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M9 15l2 2 4-4"></path></svg>
+                <FileCheck size={18} />
               </div>
               <div style={{ flex: 1 }}>
                 <p style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: "#0f172a" }}>Word / eCTD package</p>
@@ -9027,7 +8781,7 @@ function ExportReportModal({ isOpen, onClose, showToast }: ExportReportModalProp
               </div>
               {exportMode === "ectd" && (
                 <div style={{ width: 20, height: 20, color: "#059669", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M15.188 5.11a.5.5 0 0 1 .752.626l-.056.084-7.5 9a.5.5 0 0 1-.738.033l-3.5-3.5-.064-.078a.501.501 0 0 1 .693-.693l.078.064 3.113 3.113 7.15-8.58z"></path></svg>
+                  <Check size={20} fill="currentColor" />
                 </div>
               )}
             </button>
@@ -9037,7 +8791,7 @@ function ExportReportModal({ isOpen, onClose, showToast }: ExportReportModalProp
               onClick={() => setExportMode("vault")}
               style={{
                 display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "12px 16px",
-                border: "1px solid #e2e8f0", borderRadius: "0 0 12px 12px",
+                border: "1px solid #e2e8f0", borderRadius: "0 0 8px 8px",
                 textAlign: "left", cursor: "pointer", transition: "colors 0.15s",
                 backgroundColor: exportMode === "vault" ? "#f8fafc" : "#ffffff"
               }}
@@ -9045,7 +8799,7 @@ function ExportReportModal({ isOpen, onClose, showToast }: ExportReportModalProp
               onMouseLeave={e => { if (exportMode !== "vault") e.currentTarget.style.backgroundColor = "#ffffff"; }}
             >
               <div style={{ width: 20, height: 20, color: "#64748b", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <Lock size={18} />
               </div>
               <div style={{ flex: 1 }}>
                 <p style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: "#0f172a" }}>Send to Secure Vault</p>
@@ -9053,7 +8807,7 @@ function ExportReportModal({ isOpen, onClose, showToast }: ExportReportModalProp
               </div>
               {exportMode === "vault" && (
                 <div style={{ width: 20, height: 20, color: "#059669", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M15.188 5.11a.5.5 0 0 1 .752.626l-.056.084-7.5 9a.5.5 0 0 1-.738.033l-3.5-3.5-.064-.078a.501.501 0 0 1 .693-.693l.078.064 3.113 3.113 7.15-8.58z"></path></svg>
+                  <Check size={20} fill="currentColor" />
                 </div>
               )}
             </button>
@@ -9065,13 +8819,13 @@ function ExportReportModal({ isOpen, onClose, showToast }: ExportReportModalProp
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 8 }}>
           <button
             onClick={onClose}
-            style={{ padding: "10px 16px", border: "1px solid #cbd5e1", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "#ffffff", color: "#334155" }}
+            style={{ padding: "10px 16px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "#ffffff", color: "#334155" }}
           >
             Cancel
           </button>
           <button
             onClick={handleExport}
-            style={{ background: "#059669", border: "none", color: "#ffffff", padding: "10px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "background 0.15s" }}
+            style={{ background: "#059669", border: "none", color: "#ffffff", padding: "10px 16px", borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "background 0.15s" }}
             onMouseEnter={e => (e.currentTarget.style.background = "#047857")}
             onMouseLeave={e => (e.currentTarget.style.background = "#059669")}
           >
@@ -9116,7 +8870,7 @@ function SettingsProfileTab({
         <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>Manage your personal details and regulatory credentials.</p>
       </div>
       
-      <div style={{ display: "flex", flexDirection: "column", border: "1px solid #cbd5e1", borderRadius: 12, backgroundColor: "#ffffff" }}>
+      <div style={{ display: "flex", flexDirection: "column", border: "1px solid #cbd5e1", borderRadius: 6, backgroundColor: "#ffffff" }}>
         {/* Row: Full Name */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 16, borderBottom: "1px solid #f1f5f9" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -9144,13 +8898,11 @@ function SettingsProfileTab({
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <label style={{
-            border: "2px dashed #cbd5e1", borderRadius: 12, padding: "20px",
+            border: "2px dashed #cbd5e1", borderRadius: 6, padding: "20px",
             textAlign: "center", cursor: "pointer", background: "#f8fafc",
             display: "flex", flexDirection: "column", alignItems: "center", gap: 8
           }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
+            <Upload size={24} stroke="#64748b" />
             <span style={{ fontSize: 13, color: "#475569", fontWeight: 500 }}>Click to upload signature image</span>
             <span style={{ fontSize: 11, color: "#94a3b8" }}>PNG, JPG, or SVG (transparent background recommended)</span>
             <input type="file" accept="image/png,image/jpeg,image/svg+xml" style={{ display: "none" }}
@@ -9176,17 +8928,7 @@ function SettingsProfileTab({
           </label>
           {signatureUploadError && <p style={{ fontSize: 11.5, color: "#dc2626", margin: "-2px 0 0 0" }}>{signatureUploadError}</p>}
           
-          <div style={{
-            background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, padding: "16px",
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 4, minHeight: 80, justifyContent: "center"
-          }}>
-            <span style={{ fontSize: 9.5, color: "#94a3b8", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Uploaded Signature Preview</span>
-            {uploadedSig ? (
-              <img src={uploadedSig} alt="Uploaded Signature" style={{ maxHeight: 60, maxWidth: "100%", objectFit: "contain" }} />
-            ) : (
-              <span style={{ fontSize: 13, color: "#94a3b8", fontStyle: "italic" }}>No uploaded signature configured</span>
-            )}
-          </div>
+          {/* P2: Uploaded Signature Preview panel removed */}
           
           <button onClick={() => {
             if (!uploadedSig) {
@@ -9198,7 +8940,7 @@ function SettingsProfileTab({
             setSignatureUploadError(null);
             showToast("Uploaded signature updated");
           }}
-            style={{ alignSelf: "flex-end", padding: "8px 16px", fontSize: 13, fontWeight: 600, borderRadius: 8, border: "none", background: "#059669", color: "#ffffff", cursor: "pointer", transition: "background 0.15s" }}
+            style={{ alignSelf: "flex-end", padding: "8px 16px", fontSize: 13, fontWeight: 600, borderRadius: 6, border: "none", background: "#059669", color: "#ffffff", cursor: "pointer", transition: "background 0.15s" }}
             onMouseEnter={e => (e.currentTarget.style.background = "#047857")}
             onMouseLeave={e => (e.currentTarget.style.background = "#059669")}>
             Save Signature
@@ -9222,13 +8964,13 @@ function SettingsSubscriptionTab({ onClose, onOpenUpgrade }: SettingsSubscriptio
         <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>Review license validity, volume constraints, and billing status.</p>
       </div>
       
-      <div style={{ border: "1px solid #fed7aa", borderRadius: 16, padding: 20, backgroundColor: "#fffbeb" }}>
+      <div style={{ border: "1px solid #fed7aa", borderRadius: 10, padding: 20, backgroundColor: "#fffbeb" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
           <div>
             <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#b45309" }}>Current Plan</span>
             <p style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", margin: "2px 0 0 0" }}>Team License</p>
           </div>
-          <span style={{ fontSize: 11, color: "#d97706", backgroundColor: "#fef3c7", padding: "4px 10px", borderRadius: 12, fontWeight: 600 }}>Active</span>
+          <Badge variant="warning" size="sm">Active</Badge>
         </div>
         <div style={{ display: "flex", gap: 24, marginBottom: 16, fontSize: 13, color: "#475569" }}>
           <div>
@@ -9249,8 +8991,8 @@ function SettingsSubscriptionTab({ onClose, onOpenUpgrade }: SettingsSubscriptio
         </p>
         <div className="upgrade-ring" style={{ width: "fit-content", display: "inline-block" }}>
           <button onClick={() => { onClose(); onOpenUpgrade?.(); }}
-            style={{ padding: "10px 20px", fontSize: 13, fontWeight: 600, borderRadius: 12, border: "none", background: "linear-gradient(135deg, #d97706, #f59e0b)", color: "#fff", cursor: "pointer" }}>
-            View plans
+            style={{ padding: "10px 20px", fontSize: 13, fontWeight: 600, borderRadius: 6, border: "none", background: "linear-gradient(135deg, #d97706, #f59e0b)", color: "#fff", cursor: "pointer" }}>
+            Upgrade
           </button>
         </div>
       </div>
@@ -9270,7 +9012,7 @@ function SettingsComplianceTab({ showToast }: SettingsComplianceTabProps): React
         <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>Manage regulatory compliance audits, de-identification parameters, and logs.</p>
       </div>
       
-      <div style={{ display: "flex", flexDirection: "column", border: "1px solid #cbd5e1", borderRadius: 12, backgroundColor: "#ffffff" }}>
+      <div style={{ display: "flex", flexDirection: "column", border: "1px solid #cbd5e1", borderRadius: 6, backgroundColor: "#ffffff" }}>
         {/* Row: Regulatory Conformity */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 16, borderBottom: "1px solid #f1f5f9" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -9278,7 +9020,7 @@ function SettingsComplianceTab({ showToast }: SettingsComplianceTabProps): React
             <span style={{ fontSize: 12, color: "#64748b" }}>View auto-generated HIPAA / CIOMS conformity certs.</span>
           </div>
           <button onClick={() => showToast("Downloading Compliance Report bundle...")}
-            style={{ fontSize: 12, fontWeight: 600, color: "#059669", background: "#ecfdf5", border: "none", borderRadius: 6, padding: "6px 12px", cursor: "pointer", transition: "background 0.15s" }}
+            style={{ fontSize: 12, fontWeight: 600, color: "#059669", background: "#ecfdf5", border: "none", borderRadius: 4, padding: "6px 12px", cursor: "pointer", transition: "background 0.15s" }}
             onMouseEnter={e => (e.currentTarget.style.background = "#d1fae5")}
             onMouseLeave={e => (e.currentTarget.style.background = "#ecfdf5")}>
             Download Bundle
@@ -9292,7 +9034,7 @@ function SettingsComplianceTab({ showToast }: SettingsComplianceTabProps): React
             <span style={{ fontSize: 12, color: "#64748b" }}>Review full cryptographic pipeline audit trace.</span>
           </div>
           <button onClick={() => showToast("Exporting Audit Log...")}
-            style={{ fontSize: 12, fontWeight: 600, color: "#0284c7", background: "#f0f9ff", border: "none", borderRadius: 6, padding: "6px 12px", cursor: "pointer", transition: "background 0.15s" }}
+            style={{ fontSize: 12, fontWeight: 600, color: "#0284c7", background: "#f0f9ff", border: "none", borderRadius: 4, padding: "6px 12px", cursor: "pointer", transition: "background 0.15s" }}
             onMouseEnter={e => (e.currentTarget.style.background = "#e0f2fe")}
             onMouseLeave={e => (e.currentTarget.style.background = "#f0f9ff")}>
             Export Logs
@@ -9314,7 +9056,7 @@ function SettingsComplianceTab({ showToast }: SettingsComplianceTabProps): React
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 8 }}>
         <span style={{ fontSize: 13, fontWeight: 700, color: "#334155" }}>Data Source Governance</span>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, border: "1px solid #cbd5e1", borderRadius: 12, backgroundColor: "#f8fafc", padding: 14 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, border: "1px solid #cbd5e1", borderRadius: 6, backgroundColor: "#f8fafc", padding: 14 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 11.5, color: "#475569", lineHeight: 1.4 }}>
             <div>
               <strong>Genomic data (ClinVar/gnomAD/Ensembl):</strong> GINA-aware handling; population allele frequencies are aggregate, non-identifying; no individual genotype storage.
@@ -9354,18 +9096,14 @@ function SettingsPreferencesTab({ workflowExecution, setWorkflowExecution }: Set
         <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>Configure the default UI appearance and pipeline settings.</p>
       </div>
       
-      <div style={{ display: "flex", flexDirection: "column", border: "1px solid #cbd5e1", borderRadius: 12, backgroundColor: "#ffffff" }}>
+      <div style={{ display: "flex", flexDirection: "column", border: "1px solid #cbd5e1", borderRadius: 6, backgroundColor: "#ffffff" }}>
         {/* Row: Default Workflow Execution */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0, flex: 1 }}>
             <span style={{ fontSize: 13.5, fontWeight: 600, color: "#0f172a" }}>Default Workflow Execution</span>
             <span style={{ fontSize: 12, color: "#64748b" }}>Run pipeline sequentially or stagger agent DAGs.</span>
           </div>
-          <select value={workflowExecution} onChange={e => setWorkflowExecution(e.target.value)}
-            style={{ padding: "8px 12px", fontSize: 13.5, border: "1px solid #cbd5e1", borderRadius: 8, background: "#f8fafc", color: "#0f172a", outline: "none", width: 180 }}>
-            <option value="staggered">Staggered (Fast)</option>
-            <option value="sequential">Sequential (Strict)</option>
-          </select>
+          <Select value={workflowExecution} onChange={setWorkflowExecution} options={[{label:"Staggered (Fast)",value:"staggered"},{label:"Sequential (Strict)",value:"sequential"}]} style={{ width: 180 }} />
         </div>
       </div>
     </div>
@@ -9396,7 +9134,7 @@ function SettingsNotificationsTab({
         <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>Set up email integrations and compliance warnings.</p>
       </div>
       
-      <div style={{ display: "flex", flexDirection: "column", border: "1px solid #cbd5e1", borderRadius: 12, backgroundColor: "#ffffff" }}>
+      <div style={{ display: "flex", flexDirection: "column", border: "1px solid #cbd5e1", borderRadius: 6, backgroundColor: "#ffffff" }}>
         {/* Switch 1: Report Completions */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 16, borderBottom: "1px solid #f1f5f9" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0, flex: 1 }}>
@@ -9480,13 +9218,11 @@ function SettingsDocsTab(): React.ReactElement {
       
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <a href="https://www.fda.gov/drugs/questions-and-answers-fdas-adverse-event-reporting-system-faers" target="_blank" rel="noreferrer"
-          style={{ padding: 12, border: "1px solid #cbd5e1", borderRadius: 10, display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "#334155", transition: "border-color 0.15s" }}
+          style={{ padding: 12, border: "1px solid #cbd5e1", borderRadius: 6, display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "#334155", transition: "border-color 0.15s" }}
           onMouseEnter={e => (e.currentTarget.style.borderColor = "#059669")}
           onMouseLeave={e => (e.currentTarget.style.borderColor = "#cbd5e1")}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: "#ecfdf5", border: "1px solid #a7f3d0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
+          <div style={{ width: 32, height: 32, borderRadius: 6, background: "#ecfdf5", border: "1px solid #a7f3d0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Info size={15} stroke="#059669" strokeWidth={2} />
           </div>
           <div>
             <span style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a" }}>FDA FAERS Safety Reporting Guidelines</span>
@@ -9495,13 +9231,11 @@ function SettingsDocsTab(): React.ReactElement {
         </a>
 
         <a href="https://www.ema.europa.eu/en/human-regulatory/post-authorisation/pharmacovigilance" target="_blank" rel="noreferrer"
-          style={{ padding: 12, border: "1px solid #cbd5e1", borderRadius: 10, display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "#334155", transition: "border-color 0.15s" }}
+          style={{ padding: 12, border: "1px solid #cbd5e1", borderRadius: 6, display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "#334155", transition: "border-color 0.15s" }}
           onMouseEnter={e => (e.currentTarget.style.borderColor = "#059669")}
           onMouseLeave={e => (e.currentTarget.style.borderColor = "#cbd5e1")}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: "#ecfdf5", border: "1px solid #a7f3d0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
+          <div style={{ width: 32, height: 32, borderRadius: 6, background: "#ecfdf5", border: "1px solid #a7f3d0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Info size={15} stroke="#059669" strokeWidth={2} />
           </div>
           <div>
             <span style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a" }}>EMA Pharmacovigilance Guidelines</span>
@@ -9509,11 +9243,9 @@ function SettingsDocsTab(): React.ReactElement {
           </div>
         </a>
 
-        <div style={{ padding: 12, border: "1px solid #cbd5e1", borderRadius: 10, display: "flex", alignItems: "flex-start", gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: "#f8fafc", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
-            </svg>
+        <div style={{ padding: 12, border: "1px solid #cbd5e1", borderRadius: 6, display: "flex", alignItems: "flex-start", gap: 10 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 6, background: "#f8fafc", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <File size={15} stroke="#64748b" />
           </div>
           <div>
             <span style={{ fontSize: 13.5, fontWeight: 700, color: "#0f172a" }}>WinnowAI User Manual v1.2</span>
@@ -9574,55 +9306,42 @@ function SettingsPageModal({
       id: "profile",
       label: "Profile & Signature",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
-        </svg>
+        <User size={15} />
       )
     },
     {
       id: "subscription",
       label: "Subscription & Billing",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" />
-        </svg>
+        <CreditCard size={15} />
       )
     },
     {
       id: "compliance",
       label: "Compliance & Audit",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-        </svg>
+        <Shield size={15} />
       )
     },
     {
       id: "preferences",
       label: "Preferences",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="4" y1="6" x2="20" y2="6" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="18" x2="20" y2="18" />
-          <circle cx="8" cy="6" r="2" fill="currentColor" /><circle cx="16" cy="12" r="2" fill="currentColor" /><circle cx="10" cy="18" r="2" fill="currentColor" />
-        </svg>
+        <SlidersHorizontal size={15} />
       )
     },
     {
       id: "notifications",
       label: "Notifications",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
-        </svg>
+        <Bell size={15} />
       )
     },
     {
       id: "docs",
       label: "Guidance & Docs",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" />
-        </svg>
+        <FileText size={15} />
       )
     }
   ];
@@ -9711,7 +9430,7 @@ function SidebarModal({
   if (!isOpen) return null;
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(15,23,42,0.40)", backdropFilter: "blur(4px)", padding: 16 }}>
-      <div style={{ background: "#ffffff", borderRadius: 24, maxWidth: 960, width: "100%", height: 600, display: "flex", overflow: "hidden", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", border: "1px solid #cbd5e1" }}>
+      <div style={{ background: "#ffffff", borderRadius: 12, maxWidth: 960, width: "100%", height: 600, display: "flex", overflow: "hidden", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", border: "1px solid #cbd5e1" }}>
         
         {/* Left Sidebar Nav */}
         <nav aria-label={title} style={{ width: 192, borderRight: "1px solid #cbd5e1", backgroundColor: "#f8fafc", padding: 16, display: "flex", flexDirection: "column", gap: 12, flexShrink: 0, overflowY: "auto" }}>
@@ -9726,7 +9445,7 @@ function SidebarModal({
                 <li key={t.id}>
                   <button type="button" onClick={() => setActiveTab(t.id)}
                     style={{
-                      width: "100%", textAlign: "left", padding: "8px 12px", borderRadius: 6, border: "none", fontSize: 13, fontWeight: isActive ? 600 : 500,
+                      width: "100%", textAlign: "left", padding: "8px 12px", borderRadius: 4, border: "none", fontSize: 13, fontWeight: isActive ? 600 : 500,
                       backgroundColor: isActive ? "#e2e8f0" : "transparent", color: isActive ? "#0f172a" : "#475569",
                       cursor: "pointer", display: "flex", alignItems: "center", gap: 8, transition: "all 0.15s"
                     }}
@@ -9749,15 +9468,7 @@ function SidebarModal({
         <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, background: "#ffffff" }}>
           {/* Header containing X close button only */}
           <div style={{ display: "flex", justifyContent: "flex-end", padding: "16px 24px 8px 24px", flexShrink: 0 }}>
-            <button onClick={onClose} type="button" aria-label="Close"
-              style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", color: "#94a3b8", transition: "all 0.15s" }}
-              onMouseEnter={e => (e.currentTarget.style.background = "#f1f5f9")}
-              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="15" y1="5" x2="5" y2="15"></line>
-                <line x1="5" y1="5" x2="15" y2="15"></line>
-              </svg>
-            </button>
+            <IconButton onClick={onClose} aria-label="Close"><X size={20} /></IconButton>
           </div>
 
           {/* Scrollable tab content */}
@@ -9889,107 +9600,23 @@ function WorkspaceComplianceTab({ showToast }: WorkspaceComplianceTabProps): Rea
   const hasUploadedSignature = sigText.startsWith("data:image/");
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16, height: "100%", position: "relative" }}>
-      {/* Header actions */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-        <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>Library of auto-generated PHI and GDPR compliance attestations.</p>
-        <button 
-          onClick={() => showToast("Initializing new compliance audit run...")}
-          style={{
-            padding: "8px 16px", fontSize: 13, fontWeight: 600, borderRadius: 8, border: "none",
-            background: "linear-gradient(135deg, #d97706, #f59e0b)", color: "#fff", cursor: "pointer"
-          }}
-        >
-          Generate Report
-        </button>
-      </div>
-
-      {/* Filter bar */}
-      <div style={{ display: "flex", gap: 12, alignItems: "center", backgroundColor: "#f8fafc", padding: 12, borderRadius: 10, border: "1px solid #e2e8f0" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Type</label>
-          <select value={filterType} onChange={e => setFilterType(e.target.value)} style={{ padding: "4px 8px", fontSize: 12, borderRadius: 6, border: "1px solid #cbd5e1", outline: "none", background: "#fff" }}>
-            <option value="all">All Types</option>
-            <option value="PHI Safe Harbor">PHI Safe Harbor</option>
-            <option value="GDPR Compliance">GDPR Compliance</option>
-            <option value="Signal Eval">Signal Eval</option>
-          </select>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Status</label>
-          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ padding: "4px 8px", fontSize: 12, borderRadius: 6, border: "1px solid #cbd5e1", outline: "none", background: "#fff" }}>
-            <option value="all">All Statuses</option>
-            <option value="Cleared">Cleared</option>
-            <option value="Flagged">Flagged</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Table container */}
-      <div style={{ flex: 1, overflowY: "auto", border: "1px solid #cbd5e1", borderRadius: 12, backgroundColor: "#fff" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, textAlign: "left" }}>
-          <thead>
-            <tr style={{ background: "#f8fafc", borderBottom: "1px solid #cbd5e1" }}>
-              <th style={{ padding: "10px 16px", fontWeight: 600, color: "#475569" }}>Report ID</th>
-              <th style={{ padding: "10px 16px", fontWeight: 600, color: "#475569" }}>Title</th>
-              <th style={{ padding: "10px 16px", fontWeight: 600, color: "#475569" }}>Type</th>
-              <th style={{ padding: "10px 16px", fontWeight: 600, color: "#475569" }}>Date</th>
-              <th style={{ padding: "10px 16px", fontWeight: 600, color: "#475569" }}>Status</th>
-              <th style={{ padding: "10px 16px", fontWeight: 600, color: "#475569" }}>Signed By</th>
-              <th style={{ padding: "10px 16px", fontWeight: 600, color: "#475569", textAlign: "right" }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {reports.length === 0 ? (
-              <tr>
-                <td colSpan={7} style={{ padding: "32px 16px", textAlign: "center", color: "#64748b" }}>No compliance reports found matching criteria.</td>
-              </tr>
-            ) : (
-              reports.map(r => (
-                <tr key={r.id} style={{ borderBottom: "1px solid #f1f5f9", cursor: "pointer", transition: "background 0.15s" }} className="hover:bg-slate-50" onClick={() => setSelectedReportId(r.id)}>
-                  <td style={{ padding: "12px 16px", fontWeight: 600, color: "#0f172a", fontFamily: "monospace" }}>{r.id}</td>
-                  <td style={{ padding: "12px 16px", color: "#334155" }}>{r.title}</td>
-                  <td style={{ padding: "12px 16px", color: "#475569" }}>
-                    <span style={{ fontSize: 11.5, background: "#f1f5f9", padding: "2px 6px", borderRadius: 4, fontWeight: 500 }}>{r.type}</span>
-                  </td>
-                  <td style={{ padding: "12px 16px", color: "#64748b" }}>{r.date}</td>
-                  <td style={{ padding: "12px 16px" }}>
-                    <span style={{
-                      fontSize: 11.5, fontWeight: 600, padding: "2px 8px", borderRadius: 20,
-                      background: r.status === "Cleared" ? "#ecfdf5" : "#fffbeb",
-                      color: r.status === "Cleared" ? "#047857" : "#b45309",
-                      border: r.status === "Cleared" ? "1px solid #a7f3d0" : "1px solid #fde68a"
-                    }}>
-                      {r.status}
-                    </span>
-                  </td>
-                  <td style={{ padding: "12px 16px", color: "#475569" }}>{r.signedBy}</td>
-                  <td style={{ padding: "12px 16px", textAlign: "right" }} onClick={e => e.stopPropagation()}>
-                    <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-                      <button onClick={() => setSelectedReportId(r.id)} style={{ padding: "4px 8px", fontSize: 12, background: "#f1f5f9", border: "none", borderRadius: 6, color: "#475569", cursor: "pointer", fontWeight: 500 }}>View</button>
-                      <button onClick={() => showToast(`Downloading PDF for ${r.id}...`)} style={{ padding: "4px 8px", fontSize: 12, background: "#ecfdf5", border: "none", borderRadius: 6, color: "#047857", cursor: "pointer", fontWeight: 500 }}>Export</button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Detail Drawer (Overlay) */}
-      {selectedReport && (
-        <div style={{
-          position: "absolute", top: 0, right: 0, bottom: 0, width: 380, background: "#fff",
-          borderLeft: "1px solid #cbd5e1", boxShadow: "-4px 0 12px rgba(0,0,0,0.05)", zIndex: 10,
-          display: "flex", flexDirection: "column", padding: 20, boxSizing: "border-box"
-        }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f1f5f9", paddingBottom: 12, marginBottom: 16 }}>
-            <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#0f172a" }}>Report Details - {selectedReport.id}</h4>
-            <button onClick={() => setSelectedReportId(null)} style={{ border: "none", background: "transparent", fontSize: 18, color: "#94a3b8", cursor: "pointer" }}>&times;</button>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16, height: "100%" }}>
+      {selectedReport ? (
+        /* Detail view — in-place content swap */
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <button onClick={() => setSelectedReportId(null)} style={{ display: "flex", alignItems: "center", gap: 4, border: "none", background: "transparent", color: C.brand, fontSize: 13, fontWeight: 600, cursor: "pointer", padding: 0 }}>
+              {/* TODO(ds): back icon from DS */}
+              ← Back to Compliance Reports
+            </button>
           </div>
-          
-          <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, border: "1px solid #cbd5e1", borderRadius: 6, padding: 20, overflowY: "auto", backgroundColor: "#fff" }}>
+            {/* TODO(ds): card border token */}
+            <div>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>Report ID</span>
+              <p style={{ margin: "2px 0 0 0", fontSize: 15, fontWeight: 700, color: "#0f172a" }}>{selectedReport.id}</p>
+            </div>
+
             <div>
               <span style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>Title</span>
               <p style={{ margin: "2px 0 0 0", fontSize: 13.5, fontWeight: 600, color: "#1e293b" }}>{selectedReport.title}</p>
@@ -10008,7 +9635,7 @@ function WorkspaceComplianceTab({ showToast }: WorkspaceComplianceTabProps): Rea
             {selectedReport.checklist.length > 0 && (
               <div>
                 <span style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>Safe Harbor 18-Identifier Audit</span>
-                <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 6, maxHeight: 180, overflowY: "auto", border: "1px solid #f1f5f9", padding: 8, borderRadius: 8, background: "#f8fafc" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 6, maxHeight: 180, overflowY: "auto", border: "1px solid #f1f5f9", padding: 8, borderRadius: 6, background: "#f8fafc" }}>
                   {selectedReport.checklist.map((c, i) => (
                     <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5 }}>
                       <span style={{ color: "#475569", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "70%" }}>{c.identifier}</span>
@@ -10021,7 +9648,7 @@ function WorkspaceComplianceTab({ showToast }: WorkspaceComplianceTabProps): Rea
 
             <div>
               <span style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>Part 11 Signature Mark</span>
-              <div style={{ marginTop: 6, border: "1px solid #cbd5e1", borderRadius: 8, padding: 8, background: "#f8fafc", minHeight: 60, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ marginTop: 6, border: "1px solid #cbd5e1", borderRadius: 6, padding: 8, background: "#f8fafc", minHeight: 60, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {selectedReport.status === "Cleared" && hasUploadedSignature ? (
                   <img src={sigText} alt="Reviewer Signature" style={{ maxHeight: 40, maxWidth: "100%", objectFit: "contain" }} />
                 ) : selectedReport.status === "Cleared" ? (
@@ -10031,19 +9658,92 @@ function WorkspaceComplianceTab({ showToast }: WorkspaceComplianceTabProps): Rea
                 )}
               </div>
             </div>
-          </div>
 
-          {/* Regulatory-output exclusion notice */}
-          <div style={{ padding: "8px 12px", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, fontSize: 11.5, color: "#b45309", lineHeight: 1.4, margin: "12px 0 0 0" }}>
-            ⚠️ Sandbox and In Review sub-agents are automatically excluded from regulatory outputs in compliance audits.
-          </div>
+            {/* Regulatory-output exclusion notice */}
+            <div style={{ padding: "8px 12px", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 6, fontSize: 11.5, color: "#b45309", lineHeight: 1.4 }}>
+              ⚠️ Sandbox and In Review sub-agents are automatically excluded from regulatory outputs in compliance audits.
+            </div>
 
-          <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: 12, marginTop: 12, display: "flex", gap: 10 }}>
-            <button onClick={() => showToast(`Downloading PDF for ${selectedReport.id}...`)} style={{ flex: 1, padding: "8px 12px", fontSize: 12.5, fontWeight: 600, border: "none", borderRadius: 8, background: C.brand, color: "#fff", cursor: "pointer" }}>
-              Download PDF
-            </button>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => showToast(`Downloading PDF for ${selectedReport.id}...`)} style={{ flex: 1, padding: "8px 12px", fontSize: 12.5, fontWeight: 600, border: "none", borderRadius: 6, background: C.brand, color: "#fff", cursor: "pointer" }}>
+                Download PDF
+              </button>
+            </div>
           </div>
         </div>
+      ) : (
+        <>
+          {/* Header actions */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+            <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>Library of auto-generated PHI and GDPR compliance attestations.</p>
+            <button 
+              onClick={() => showToast("Initializing new compliance audit run...")}
+              style={{
+                padding: "8px 16px", fontSize: 13, fontWeight: 600, borderRadius: 6, border: "none",
+                background: "#059669", color: "#fff", cursor: "pointer"
+              }}
+            >
+              Generate Report
+            </button>
+          </div>
+
+          {/* Filter bar */}
+          <div style={{ display: "flex", gap: 12, alignItems: "center", backgroundColor: "#f8fafc", padding: 12, borderRadius: 6, border: "1px solid #e2e8f0" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Type</label>
+              <Select value={filterType} onChange={setFilterType} options={[{label:"All Types",value:"all"},{label:"PHI Safe Harbor",value:"PHI Safe Harbor"},{label:"GDPR Compliance",value:"GDPR Compliance"},{label:"Signal Eval",value:"Signal Eval"}]} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Status</label>
+              <Select value={filterStatus} onChange={setFilterStatus} options={[{label:"All Statuses",value:"all"},{label:"Cleared",value:"Cleared"},{label:"Flagged",value:"Flagged"}]} />
+            </div>
+          </div>
+
+          {/* Table container */}
+          <div style={{ flex: 1, overflowY: "auto", border: "1px solid #cbd5e1", borderRadius: 6, backgroundColor: "#fff" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, textAlign: "left" }}>
+              <thead>
+                <tr style={{ background: "#f8fafc", borderBottom: "1px solid #cbd5e1" }}>
+                  <th style={{ padding: "10px 16px", fontWeight: 600, color: "#475569" }}>Report ID</th>
+                  <th style={{ padding: "10px 16px", fontWeight: 600, color: "#475569" }}>Title</th>
+                  <th style={{ padding: "10px 16px", fontWeight: 600, color: "#475569" }}>Type</th>
+                  <th style={{ padding: "10px 16px", fontWeight: 600, color: "#475569" }}>Date</th>
+                  <th style={{ padding: "10px 16px", fontWeight: 600, color: "#475569" }}>Status</th>
+                  <th style={{ padding: "10px 16px", fontWeight: 600, color: "#475569" }}>Signed By</th>
+                  <th style={{ padding: "10px 16px", fontWeight: 600, color: "#475569", textAlign: "right" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reports.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} style={{ padding: "32px 16px", textAlign: "center", color: "#64748b" }}>No compliance reports found matching criteria.</td>
+                  </tr>
+                ) : (
+                  reports.map(r => (
+                    <tr key={r.id} style={{ borderBottom: "1px solid #f1f5f9", cursor: "pointer", transition: "background 0.15s" }} className="hover:bg-slate-50" onClick={() => setSelectedReportId(r.id)}>
+                      <td style={{ padding: "12px 16px", fontWeight: 600, color: "#0f172a", fontFamily: "monospace" }}>{r.id}</td>
+                      <td style={{ padding: "12px 16px", color: "#334155" }}>{r.title}</td>
+                      <td style={{ padding: "12px 16px", color: "#475569" }}>
+                        <span style={{ fontSize: 11.5, background: "#f1f5f9", padding: "2px 6px", borderRadius: 2, fontWeight: 500 }}>{r.type}</span>
+                      </td>
+                      <td style={{ padding: "12px 16px", color: "#64748b" }}>{r.date}</td>
+                      <td style={{ padding: "12px 16px" }}>
+                        <Badge variant={r.status === "Cleared" ? "success" : "warning"}>{r.status}</Badge>
+                      </td>
+                      <td style={{ padding: "12px 16px", color: "#475569" }}>{r.signedBy}</td>
+                      <td style={{ padding: "12px 16px", textAlign: "right" }} onClick={e => e.stopPropagation()}>
+                        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+                          <button onClick={() => setSelectedReportId(r.id)} style={{ padding: "4px 8px", fontSize: 12, background: "#f1f5f9", border: "none", borderRadius: 4, color: "#475569", cursor: "pointer", fontWeight: 500 }}>View</button>
+                          <button onClick={() => showToast(`Downloading PDF for ${r.id}...`)} style={{ padding: "4px 8px", fontSize: 12, background: "#ecfdf5", border: "none", borderRadius: 4, color: "#047857", cursor: "pointer", fontWeight: 500 }}>Export</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );
@@ -10073,15 +9773,13 @@ function WorkspaceAuditTab({ showToast }: WorkspaceAuditTabProps): React.ReactEl
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, height: "100%" }}>
       {/* Tamper banner */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8 }}>
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-        </svg>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 6 }}>
+        <Shield size={16} stroke="#16a34a" strokeWidth={2.5} />
         <span style={{ fontSize: 12.5, color: "#15803d", fontWeight: 600 }}>SHA-256 integrity-chained audit logs · 21 CFR Part 11 Compliance Ledger</span>
       </div>
 
       {/* Filter and Search */}
-      <div style={{ display: "flex", gap: 12, alignItems: "center", backgroundColor: "#f8fafc", padding: 12, borderRadius: 10, border: "1px solid #e2e8f0", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 12, alignItems: "center", backgroundColor: "#f8fafc", padding: 12, borderRadius: 6, border: "1px solid #e2e8f0", flexWrap: "wrap" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 160 }}>
           <label style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Search Log</label>
           <input 
@@ -10089,21 +9787,17 @@ function WorkspaceAuditTab({ showToast }: WorkspaceAuditTabProps): React.ReactEl
             placeholder="Search actor, action, target..." 
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            style={{ padding: "4px 8px", fontSize: 12.5, borderRadius: 6, border: "1px solid #cbd5e1", outline: "none" }}
+            style={{ padding: "4px 8px", fontSize: 12.5, borderRadius: 4, border: "1px solid #cbd5e1", outline: "none" }}
           />
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           <label style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Actor Class</label>
-          <select value={actorFilter} onChange={e => setActorFilter(e.target.value)} style={{ padding: "4px 8px", fontSize: 12, borderRadius: 6, border: "1px solid #cbd5e1", outline: "none", background: "#fff" }}>
-            <option value="all">All Actors</option>
-            <option value="user">User Actions Only</option>
-            <option value="agent">Agent Pipeline Only</option>
-          </select>
+          <Select value={actorFilter} onChange={setActorFilter} options={[{label:"All Actors",value:"all"},{label:"User Actions Only",value:"user"},{label:"Agent Pipeline Only",value:"agent"}]} />
         </div>
         <div style={{ alignSelf: "flex-end" }}>
           <button 
             onClick={() => showToast("Exporting cryptographic audit log (CSV)...")}
-            style={{ padding: "6px 12px", fontSize: 12.5, fontWeight: 600, border: `1px solid ${C.border}`, borderRadius: 6, background: "#fff", color: C.text2, cursor: "pointer" }}
+            style={{ padding: "6px 12px", fontSize: 12.5, fontWeight: 600, border: `1px solid ${C.border}`, borderRadius: 4, background: "#fff", color: C.text2, cursor: "pointer" }}
           >
             Export CSV
           </button>
@@ -10111,7 +9805,7 @@ function WorkspaceAuditTab({ showToast }: WorkspaceAuditTabProps): React.ReactEl
       </div>
 
       {/* Logs Table */}
-      <div style={{ flex: 1, overflowY: "auto", border: "1px solid #cbd5e1", borderRadius: 12, backgroundColor: "#fff" }}>
+      <div style={{ flex: 1, overflowY: "auto", border: "1px solid #cbd5e1", borderRadius: 6, backgroundColor: "#fff" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, textAlign: "left" }}>
           <thead>
             <tr style={{ background: "#f8fafc", borderBottom: "1px solid #cbd5e1" }}>
@@ -10130,7 +9824,7 @@ function WorkspaceAuditTab({ showToast }: WorkspaceAuditTabProps): React.ReactEl
                 <td style={{ padding: "10px 12px", fontWeight: 600, color: "#334155" }}>{l.actor}</td>
                 <td style={{ padding: "10px 12px" }}>
                   <span style={{
-                    fontSize: 11, padding: "2px 6px", borderRadius: 4, fontWeight: 600,
+                    fontSize: 11, padding: "2px 6px", borderRadius: 2, fontWeight: 600,
                     background: l.action === "Signature applied" ? "#e0f2fe" : l.action === "PHI scan" ? "#fee2e2" : "#f1f5f9",
                     color: l.action === "Signature applied" ? "#0369a1" : l.action === "PHI scan" ? "#b91c1c" : "#475569"
                   }}>
@@ -10163,23 +9857,19 @@ function WorkspaceSignaturesTab({ onClose, showToast }: WorkspaceSignaturesTabPr
       {/* Top Card: Active Signature */}
       <div style={{
         display: "flex", justifyContent: "space-between", alignItems: "center", padding: 18,
-        border: "1px solid #cbd5e1", borderRadius: 12, background: "#f8fafc"
+        border: "1px solid #cbd5e1", borderRadius: 6, background: "#f8fafc"
       }}>
         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
           <div style={{
-            width: 100, height: 50, border: "1px solid #cbd5e1", borderRadius: 8, background: "#fff",
+            width: 100, height: 50, border: "1px solid #cbd5e1", borderRadius: 6, background: "#fff",
             display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden"
           }}>
-            {hasUploadedSignature ? (
-              <img src={sigText} alt="Active Signature" style={{ maxHeight: "90%", maxWidth: "90%", objectFit: "contain" }} />
-            ) : (
-              <span style={{ fontSize: 11, color: "#94a3b8" }}>No Sig File</span>
-            )}
+            <img src={sigText} alt="Active Signature" style={{ maxHeight: "90%", maxWidth: "90%", objectFit: "contain" }} />
           </div>
           <div>
             <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#0f172a" }}>Attestation Profile</h4>
             <p style={{ margin: "2px 0 0 0", fontSize: 12.5, color: "#64748b" }}>
-              {hasUploadedSignature ? "Signature verified and locked for regulatory signing." : "Signature missing. Upload PNG/JPG in Settings to authorize reports."}
+              Signature on file and ready for regulatory signing.
             </p>
           </div>
         </div>
@@ -10190,7 +9880,7 @@ function WorkspaceSignaturesTab({ onClose, showToast }: WorkspaceSignaturesTabPr
           }}
           style={{
             padding: "8px 14px", fontSize: 12.5, fontWeight: 600, border: "1px solid #cbd5e1",
-            borderRadius: 8, backgroundColor: "#fff", color: C.text2, cursor: "pointer"
+            borderRadius: 6, backgroundColor: "#fff", color: C.text2, cursor: "pointer"
           }}
         >
           Manage
@@ -10200,9 +9890,9 @@ function WorkspaceSignaturesTab({ onClose, showToast }: WorkspaceSignaturesTabPr
       {/* Signature Log */}
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#0f172a" }}>Reviewer Audit Log</h4>
-        <div style={{ border: "1px solid #cbd5e1", borderRadius: 12, backgroundColor: "#fff", overflow: "hidden" }}>
+          <div style={{ border: "1px solid #cbd5e1", borderRadius: 6, backgroundColor: "#fff", overflow: "hidden", paddingBottom: 16 }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5, textAlign: "left" }}>
-            <thead>
+            <thead style={{ position: "sticky", top: 0, zIndex: 1 }}>
               <tr style={{ background: "#f8fafc", borderBottom: "1px solid #cbd5e1" }}>
                 <th style={{ padding: "10px 16px", fontWeight: 600, color: "#475569" }}>Signing Date</th>
                 <th style={{ padding: "10px 16px", fontWeight: 600, color: "#475569" }}>Report Signed</th>
@@ -10221,7 +9911,7 @@ function WorkspaceSignaturesTab({ onClose, showToast }: WorkspaceSignaturesTabPr
                   <td style={{ padding: "12px 16px", color: "#334155" }}>{sh.reviewer}</td>
                   <td style={{ padding: "12px 16px" }}>
                     <div style={{
-                      width: 50, height: 26, border: "1px solid #e2e8f0", borderRadius: 4, background: "#f8fafc",
+                      width: 50, height: 26, border: "1px solid #e2e8f0", borderRadius: 2, background: "#f8fafc",
                       display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden"
                     }}>
                       {hasUploadedSignature && sh.status === "Valid" ? (
@@ -10235,7 +9925,7 @@ function WorkspaceSignaturesTab({ onClose, showToast }: WorkspaceSignaturesTabPr
                   <td style={{ padding: "12px 16px", color: "#94a3b8", fontFamily: "monospace" }}>{sh.hash}</td>
                   <td style={{ padding: "12px 16px" }}>
                     <span style={{
-                      fontSize: 11, fontWeight: 600, padding: "2px 6px", borderRadius: 20,
+                      fontSize: 11, fontWeight: 600, padding: "2px 6px", borderRadius: 12,
                       background: sh.status === "Valid" ? "#e0f2fe" : "#fee2e2",
                       color: sh.status === "Valid" ? "#0369a1" : "#dc2626"
                     }}>
@@ -10280,7 +9970,7 @@ function WorkspaceRegDocsTab({ showToast }: WorkspaceRegDocsTabProps): React.Rea
             key={cat}
             onClick={() => setSelectedCategory(cat)}
             style={{
-              padding: "6px 12px", fontSize: 12, fontWeight: 600, borderRadius: 20,
+              padding: "6px 12px", fontSize: 12, fontWeight: 600, borderRadius: 12,
               border: selectedCategory === cat ? "1px solid #059669" : "1px solid #cbd5e1",
               backgroundColor: selectedCategory === cat ? "#ecfdf5" : "#fff",
               color: selectedCategory === cat ? "#047857" : "#475569",
@@ -10299,23 +9989,17 @@ function WorkspaceRegDocsTab({ showToast }: WorkspaceRegDocsTabProps): React.Rea
       }}>
         {filteredDocs.map((doc, idx) => (
           <div key={idx} style={{
-            border: "1px solid #cbd5e1", borderRadius: 12, backgroundColor: "#fff",
+            border: "1px solid #cbd5e1", borderRadius: 6, backgroundColor: "#fff",
             padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.05)", transition: "all 0.15s"
+            boxShadow: "0 1px 3px rgba(0,0,0,0.05)", transition: "all 0.15s", maxHeight: 220, alignSelf: "flex-start"
           }} className="hover:border-emerald-500">
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
                 {/* Doc icon */}
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ background: "#ecfdf5", padding: 6, borderRadius: 8 }}>
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
-                </svg>
+                <File size={28} stroke="#059669" style={{ background: "#ecfdf5", padding: 6, borderRadius: 6 }} />
                 <div style={{ display: "flex", gap: 6 }}>
-                  <span style={{
-                    fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4,
-                    background: doc.status === "Submitted" ? "#e0f2fe" : doc.status === "Final" ? "#ecfdf5" : "#f1f5f9",
-                    color: doc.status === "Submitted" ? "#0369a1" : doc.status === "Final" ? "#047857" : "#475569"
-                  }}>{doc.status}</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, background: "#f1f5f9", color: "#475569", padding: "2px 6px", borderRadius: 4 }}>{doc.format}</span>
+                  <Badge variant={doc.status === "Submitted" ? "info" : doc.status === "Final" ? "success" : "neutral"} size="sm">{doc.status}</Badge>
+                  <Badge variant="neutral" size="sm">{doc.format}</Badge>
                 </div>
               </div>
               <h4 style={{ margin: "0 0 4px 0", fontSize: 13.5, fontWeight: 700, color: "#0f172a", lineHeight: 1.4 }}>{doc.title}</h4>
@@ -10326,7 +10010,7 @@ function WorkspaceRegDocsTab({ showToast }: WorkspaceRegDocsTabProps): React.Rea
               <span style={{ fontSize: 11, color: "#94a3b8" }}>Modified {doc.date}</span>
               <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={() => showToast(`Opening document preview...`)} style={{ fontSize: 11.5, fontWeight: 600, color: "#059669", background: "none", border: "none", cursor: "pointer" }}>Open</button>
-                <button onClick={() => showToast(`Downloading ${doc.title} in ${doc.format} format...`)} style={{ fontSize: 11.5, fontWeight: 600, color: "#475569", background: "none", border: "none", cursor: "pointer" }}>Export</button>
+                <button onClick={() => showToast(`Downloading ${doc.title} in ${doc.format} format...`)} style={{ fontSize: 11.5, fontWeight: 600, color: "#475569", background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}><Download size={12} />Download</button>
               </div>
             </div>
           </div>
@@ -10374,7 +10058,7 @@ function WorkspaceGuidelinesTab({ showToast }: WorkspaceGuidelinesTabProps): Rea
               key={tab}
               onClick={() => setActiveTab(tab)}
               style={{
-                padding: "6px 12px", fontSize: 13, fontWeight: activeTab === tab ? 600 : 500, borderRadius: 6,
+                padding: "6px 12px", fontSize: 13, fontWeight: activeTab === tab ? 600 : 500, borderRadius: 4,
                 border: "none", backgroundColor: activeTab === tab ? "#f1f5f9" : "transparent",
                 color: activeTab === tab ? "#0f172a" : "#64748b", cursor: "pointer"
               }}
@@ -10388,7 +10072,7 @@ function WorkspaceGuidelinesTab({ showToast }: WorkspaceGuidelinesTabProps): Rea
           placeholder="Search guidelines..."
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          style={{ padding: "6px 10px", fontSize: 12.5, borderRadius: 6, border: "1px solid #cbd5e1", outline: "none", width: 200, marginLeft: "auto" }}
+          style={{ padding: "6px 10px", fontSize: 12.5, borderRadius: 4, border: "1px solid #cbd5e1", outline: "none", width: 200, marginLeft: "auto" }}
         />
       </div>
 
@@ -10396,12 +10080,12 @@ function WorkspaceGuidelinesTab({ showToast }: WorkspaceGuidelinesTabProps): Rea
       <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12, paddingRight: 4 }}>
         {filtered.map((g, idx) => (
           <div key={idx} style={{
-            border: "1px solid #cbd5e1", borderRadius: 10, padding: 14, backgroundColor: "#fff",
+            border: "1px solid #cbd5e1", borderRadius: 6, padding: 14, backgroundColor: "#fff",
             boxShadow: "0 1px 2px rgba(0,0,0,0.02)", display: "flex", flexDirection: "column", gap: 6
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, background: "#ecfdf5", color: "#047857", padding: "2px 6px", borderRadius: 4 }}>{g.code}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, background: "#ecfdf5", color: "#047857", padding: "2px 6px", borderRadius: 2 }}>{g.code}</span>
                 <span style={{ fontSize: 11, color: "#64748b" }}>Published {g.year}</span>
               </div>
               <a 
@@ -10415,9 +10099,7 @@ function WorkspaceGuidelinesTab({ showToast }: WorkspaceGuidelinesTabProps): Rea
                 }}
               >
                 <span>Open Link</span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/>
-                </svg>
+                <ExternalLink size={12} strokeWidth={2.5} />
               </a>
             </div>
             <h4 style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: "#0f172a" }}>{g.title}</h4>
@@ -10456,7 +10138,7 @@ function WorkspaceHipaaTab({ showToast }: WorkspaceHipaaTabProps): React.ReactEl
       {/* Stat Tiles */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 }}>
         {statTiles.map((tile, i) => (
-          <div key={i} style={{ border: "1px solid #cbd5e1", borderRadius: 10, padding: 14, background: "#f8fafc" }}>
+          <div key={i} style={{ border: "1px solid #cbd5e1", borderRadius: 6, padding: 14, background: "#f8fafc" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>{tile.label}</span>
               <span style={{ fontSize: 14, color: "#0d9488" }}>{tile.icon}</span>
@@ -10477,7 +10159,7 @@ function WorkspaceHipaaTab({ showToast }: WorkspaceHipaaTabProps): React.ReactEl
             Download Policy PDF
           </button>
         </div>
-        <div style={{ border: "1px solid #cbd5e1", borderRadius: 12, background: "#fff", overflow: "hidden" }}>
+        <div style={{ border: "1px solid #cbd5e1", borderRadius: 6, background: "#fff", overflow: "hidden" }}>
           {policySections.map((sec) => {
             const isOpen = openSection === sec.id;
             return (
@@ -10525,7 +10207,7 @@ function WorkspaceManualTab(): React.ReactElement {
           <h5 style={{ margin: "14px 0 6px 0", fontSize: 13.5, fontWeight: 700, color: "#0f172a" }}>Step 3: Verification and Thresholding</h5>
           <p style={{ margin: "0 0 10px 0" }}>The <strong>Medical Reviewer</strong> sub-agents will perform genomic validation (via ClinVar/gnomAD), pathway analysis, and tissue-expression mapping. Finally, the coordinator computes the Proportional Reporting Ratio (PRR) and checks if signals cross your configured significance threshold (e.g., PRR &ge; 2.0).</p>
           
-          <div style={{ margin: "16px 0", padding: "12px 14px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8, color: "#15803d" }}>
+          <div style={{ margin: "16px 0", padding: "12px 14px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 6, color: "#15803d" }}>
             <strong>Regulatory Standard Note:</strong> All signal detections run within this workspace are automatically logged in the append-only ledger (Audit Logs) in accordance with EMA GVP Module IX requirements.
           </div>
         </div>
@@ -10574,14 +10256,10 @@ function WorkspaceManualTab(): React.ReactElement {
       {/* Left TOC inside content area */}
       <div style={{ width: 180, borderRight: "1px solid #e2e8f0", paddingRight: 12, display: "flex", flexDirection: "column", gap: 4, flexShrink: 0, overflowY: "auto" }}>
         <span style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", marginBottom: 6, display: "block" }}>TOC</span>
-        <button onClick={() => setActiveArticle("detection")} style={{ textAlign: "left", padding: "6px 8px", fontSize: 12, fontWeight: activeArticle === "detection" ? 600 : 500, color: activeArticle === "detection" ? "#047857" : "#475569", background: activeArticle === "detection" ? "#ecfdf5" : "none", border: "none", borderRadius: 4, cursor: "pointer" }}>Running a Signal Detection</button>
-        <button onClick={() => setActiveArticle("attestation")} style={{ textAlign: "left", padding: "6px 8px", fontSize: 12, fontWeight: activeArticle === "attestation" ? 600 : 500, color: activeArticle === "attestation" ? "#047857" : "#475569", background: activeArticle === "attestation" ? "#ecfdf5" : "none", border: "none", borderRadius: 4, cursor: "pointer" }}>Signing & Attestation</button>
-        <button onClick={() => setActiveArticle("agents")} style={{ textAlign: "left", padding: "6px 8px", fontSize: 12, fontWeight: activeArticle === "agents" ? 600 : 500, color: activeArticle === "agents" ? "#047857" : "#475569", background: activeArticle === "agents" ? "#ecfdf5" : "none", border: "none", borderRadius: 4, cursor: "pointer" }}>The 4+1 Agents Architecture</button>
-        <span style={{ fontSize: 11, color: "#cbd5e1", padding: "4px 8px" }}>Stubs:</span>
-        <span style={{ fontSize: 11.5, color: "#94a3b8", paddingLeft: 8 }}>Configuring Thresholds</span>
-        <span style={{ fontSize: 11.5, color: "#94a3b8", paddingLeft: 8 }}>Exporting Reports</span>
-        <span style={{ fontSize: 11.5, color: "#94a3b8", paddingLeft: 8 }}>Compliance & PHI</span>
-        <span style={{ fontSize: 11.5, color: "#94a3b8", paddingLeft: 8 }}>FAQ</span>
+        <button onClick={() => setActiveArticle("detection")} style={{ textAlign: "left", padding: "6px 8px", fontSize: 12, fontWeight: activeArticle === "detection" ? 600 : 500, color: activeArticle === "detection" ? "#047857" : "#475569", background: activeArticle === "detection" ? "#ecfdf5" : "none", border: "none", borderRadius: 2, cursor: "pointer" }}>Running a Signal Detection</button>
+        <button onClick={() => setActiveArticle("attestation")} style={{ textAlign: "left", padding: "6px 8px", fontSize: 12, fontWeight: activeArticle === "attestation" ? 600 : 500, color: activeArticle === "attestation" ? "#047857" : "#475569", background: activeArticle === "attestation" ? "#ecfdf5" : "none", border: "none", borderRadius: 2, cursor: "pointer" }}>Signing & Attestation</button>
+        <button onClick={() => setActiveArticle("agents")} style={{ textAlign: "left", padding: "6px 8px", fontSize: 12, fontWeight: activeArticle === "agents" ? 600 : 500, color: activeArticle === "agents" ? "#047857" : "#475569", background: activeArticle === "agents" ? "#ecfdf5" : "none", border: "none", borderRadius: 2, cursor: "pointer" }}>The 4+1 Agents Architecture</button>
+        {/* P15: Stubs hidden */}
       </div>
 
       {/* Right Article Scroll Panel */}
@@ -10629,63 +10307,49 @@ function WorkspaceModal({
       id: "compliance",
       label: "Compliance Reports",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
-        </svg>
+        <FileText size={15} />
       )
     },
     {
       id: "audit",
       label: "Audit Logs",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
-        </svg>
+        <Monitor size={15} />
       )
     },
     {
       id: "signatures",
       label: "Signature History",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
-        </svg>
+        <User size={15} />
       )
     },
     {
       id: "regdocs",
       label: "Regulatory Docs",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-        </svg>
+        <Folder size={15} />
       )
     },
     {
       id: "guidelines",
       label: "FDA/EMA Guidelines",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-        </svg>
+        <Book size={15} />
       )
     },
     {
       id: "hipaa",
       label: "HIPAA & Privacy",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-        </svg>
+        <Lock size={15} />
       )
     },
     {
       id: "manual",
       label: "User Manual",
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" />
-        </svg>
+        <HelpCircle size={15} />
       )
     }
   ];
@@ -11011,59 +10675,35 @@ function ScheduleModal({ isOpen, onClose, showToast, schedules, setSchedules }: 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
               <label style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Select Compound</label>
-              <select value={selectedCompound} onChange={e => setSelectedCompound(e.target.value)}
-                style={{ padding: "8px 12px", fontSize: 13.5, border: "1px solid #cbd5e1", borderRadius: 8, background: "#f8fafc", color: "#0f172a", outline: "none" }}>
-                <option value="Ibuprofen">Ibuprofen</option>
-                <option value="Pembrolizumab">Pembrolizumab</option>
-                <option value="Metformin">Metformin</option>
-                <option value="Rivaroxaban">Rivaroxaban</option>
-                <option value="Atorvastatin">Atorvastatin</option>
-                <option value="Adalimumab">Adalimumab</option>
-              </select>
+              <Select value={selectedCompound} onChange={setSelectedCompound} options={["Ibuprofen","Pembrolizumab","Metformin","Rivaroxaban","Atorvastatin","Adalimumab"]} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
               <label style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Frequency</label>
-              <select value={frequency} onChange={e => setFrequency(e.target.value)}
-                style={{ padding: "8px 12px", fontSize: 13.5, border: "1px solid #cbd5e1", borderRadius: 8, background: "#f8fafc", color: "#0f172a", outline: "none" }}>
-                <option value="Daily">Daily Scan</option>
-                <option value="Weekly">Weekly Scan</option>
-                <option value="Monthly">Monthly Scan</option>
-              </select>
+              <Select value={frequency} onChange={setFrequency} options={[{label:"Daily Scan",value:"Daily"},{label:"Weekly Scan",value:"Weekly"},{label:"Monthly Scan",value:"Monthly"}]} />
             </div>
           </div>
 
           {/* Trigger Condition Config */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <label style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Alert Trigger Condition</label>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, background: "#f8fafc", padding: 12, borderRadius: 10, border: "1px solid #e2e8f0" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: "#334155" }}>
-                <input type="radio" name="trigger" checked={triggerType === "new-signal"} onChange={() => setTriggerType("new-signal")} style={{ accentColor: "#059669" }} />
-                Any new disproportionality signal detected
-              </label>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, background: "#f8fafc", padding: 12, borderRadius: 6, border: "1px solid #e2e8f0" }}>
+              <Radio checked={triggerType === "new-signal"} onChange={v => v && setTriggerType("new-signal")} label="Any new disproportionality signal detected" name="trigger" />
               
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: "#334155" }}>
-                  <input type="radio" name="trigger" checked={triggerType === "prr-threshold"} onChange={() => setTriggerType("prr-threshold")} style={{ accentColor: "#059669" }} />
-                  PRR Threshold &ge;
-                </label>
-                {triggerType === "prr-threshold" && (
-                  <input type="number" step="0.1" min="1.0" max="10.0" value={triggerPrr} onChange={e => setTriggerPrr(parseFloat(e.target.value) || 2.0)}
-                    style={{ padding: "2px 6px", width: 60, fontSize: 12.5, borderRadius: 6, border: "1px solid #cbd5e1", outline: "none" }} />
-                )}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", minHeight: 32 }}>
+                <Radio checked={triggerType === "prr-threshold"} onChange={v => v && setTriggerType("prr-threshold")} label="PRR Threshold ≥" name="trigger" />
+                <input type="number" step="0.1" min="1.0" max="10.0" value={triggerPrr} onChange={e => setTriggerPrr(parseFloat(e.target.value) || 2.0)}
+                  disabled={triggerType !== "prr-threshold"}
+                  style={{ padding: "2px 6px", width: 60, fontSize: 12.5, borderRadius: 6, border: "1px solid #cbd5e1", outline: "none", opacity: triggerType !== "prr-threshold" ? 0.4 : 1 }} />
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: "#334155" }}>
-                  <input type="radio" name="trigger" checked={triggerType === "count-delta"} onChange={() => setTriggerType("count-delta")} style={{ accentColor: "#059669" }} />
-                  Case count delta increase &ge;
-                </label>
-                {triggerType === "count-delta" && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <input type="number" min="5" max="500" value={triggerDelta} onChange={e => setTriggerDelta(parseInt(e.target.value) || 25)}
-                      style={{ padding: "2px 6px", width: 60, fontSize: 12.5, borderRadius: 6, border: "1px solid #cbd5e1", outline: "none" }} />
-                    <span style={{ fontSize: 12.5, color: "#64748b" }}>%</span>
-                  </div>
-                )}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", minHeight: 32 }}>
+                <Radio checked={triggerType === "count-delta"} onChange={v => v && setTriggerType("count-delta")} label="Case count delta increase ≥" name="trigger" />
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <input type="number" min="5" max="500" value={triggerDelta} onChange={e => setTriggerDelta(parseInt(e.target.value) || 25)}
+                    disabled={triggerType !== "count-delta"}
+                    style={{ padding: "2px 6px", width: 60, fontSize: 12.5, borderRadius: 6, border: "1px solid #cbd5e1", outline: "none", opacity: triggerType !== "count-delta" ? 0.4 : 1 }} />
+                  <span style={{ fontSize: 12.5, color: "#64748b" }}>%</span>
+                </div>
               </div>
             </div>
           </div>
@@ -11073,7 +10713,7 @@ function ScheduleModal({ isOpen, onClose, showToast, schedules, setSchedules }: 
             <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", marginBottom: 6 }}>Target Surveillance Agents</label>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {AGENTS.map(ag => (
-                <label key={ag.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", border: `1px solid #e2e8f0`, borderRadius: 8, cursor: "pointer", background: selectedAgents[ag.id] ? `${ag.color}08` : "#fff" }}>
+                <label key={ag.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", border: `1px solid #e2e8f0`, borderRadius: 6, cursor: "pointer", background: selectedAgents[ag.id] ? `${ag.color}08` : "#fff" }}>
                   <input type="checkbox" checked={!!selectedAgents[ag.id]} onChange={() => handleToggleAgent(ag.id)} style={{ accentColor: ag.color }} />
                   <span style={{ fontSize: 12.5, fontWeight: 500, color: "#334155" }}>{ag.name}</span>
                 </label>
@@ -11083,12 +10723,7 @@ function ScheduleModal({ isOpen, onClose, showToast, schedules, setSchedules }: 
 
           {/* Action button placed on the right */}
           <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 4 }}>
-            <button onClick={handleAddSchedule}
-              style={{ padding: "8px 16px", background: "linear-gradient(135deg, #059669, #0d9488)", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", transition: "background 0.15s" }}
-              onMouseEnter={e => (e.currentTarget.style.background = "#047857")}
-              onMouseLeave={e => (e.currentTarget.style.background = C.brand)}>
-              Schedule {selectedCompound} Monitor
-            </button>
+            <Button variant="primary" onClick={handleAddSchedule}>Schedule Monitor</Button>
           </div>
 
           <div style={{ height: 1, background: "#f1f5f9" }} />
@@ -11097,17 +10732,17 @@ function ScheduleModal({ isOpen, onClose, showToast, schedules, setSchedules }: 
           <div>
             <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", marginBottom: 8 }}>Active Scheduled Monitors ({schedules.length})</label>
             {schedules.length === 0 ? (
-              <div style={{ padding: "16px", border: "1px dashed #cbd5e1", borderRadius: 12, textAlign: "center", color: "#64748b", fontSize: 12.5 }}>
+              <div style={{ padding: "16px", border: "1px dashed #cbd5e1", borderRadius: 6, textAlign: "center", color: "#64748b", fontSize: 12.5 }}>
                 No safety monitors scheduled. Add one above.
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {schedules.map((s) => (
-                  <div key={s.id} style={{ border: "1px solid #e2e8f0", borderRadius: 12, padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f8fafc" }}>
+                  <div key={s.id} style={{ border: "1px solid #e2e8f0", borderRadius: 6, padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f8fafc" }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                         <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>{s.compound}</span>
-                        <span style={{ fontSize: 10.5, color: "#059669", backgroundColor: "#ecfdf5", padding: "1px 6px", borderRadius: 6, fontWeight: 600 }}>{s.frequency}</span>
+                        <Badge variant="success" size="sm">{s.frequency}</Badge>
                       </div>
                       <p style={{ fontSize: 11.5, color: "#64748b", marginTop: 4, textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", margin: "4px 0 0 0" }}>
                         Pipeline: {s.agents.join(" → ")}
@@ -11140,7 +10775,7 @@ function ToastNotification({ message, onClose }: ToastNotificationProps): React.
   return (
     <div style={{
       position: "fixed", bottom: 24, right: 24, zIndex: 200,
-      backgroundColor: "#0f172a", color: "#fff", borderRadius: 12, padding: "12px 18px",
+      backgroundColor: "#0f172a", color: "#fff", borderRadius: 6, padding: "12px 18px",
       boxShadow: "0 20px 25px -5px rgba(0,0,0,0.15), 0 10px 10px -5px rgba(0,0,0,0.1)",
       display: "flex", alignItems: "center", gap: 10, maxWidth: 360,
       border: "1px solid rgba(255,255,255,0.08)"
@@ -11158,6 +10793,7 @@ export default function WinnowAI(): React.ReactElement {
   const [view, setView] = useState<"app" | "agent-store">("app");
   const [chatInitialMessage, setChatInitialMessage] = useState("");
   const [panelFull, setPanelFull] = useState(false);
+  const [panelActive, setPanelActive] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeAgents, setActiveAgents] = useState<Record<string, AgentActivity>>({});
 
@@ -11167,7 +10803,7 @@ export default function WinnowAI(): React.ReactElement {
   const [agentsList, setAgentsList] = useState<any[]>(AGENTS);
   const [previewRole, setPreviewRole] = useState<"scientist" | "admin">("scientist");
   const [signatureText, setSignatureText] = useState(localStorage.getItem("winnow_sig") || DEFAULT_SIGNATURE);
-  const [activeModal, setActiveModal] = useState<"upgrade" | "account" | "schedule" | "share" | "workspace" | null>(null);
+  const [activeModal, setActiveModal] = useState<"upgrade" | "account" | "schedule" | "share" | "workspace" | "agent-store" | null>(null);
   const [workspaceTab, setWorkspaceTab] = useState<string>("compliance");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   
@@ -11197,7 +10833,7 @@ export default function WinnowAI(): React.ReactElement {
   useEffect(() => {
     const handleOpenModal = (e: CustomEvent<any> | Event) => {
       const detail = (e as CustomEvent).detail;
-      if (detail === "upgrade" || detail === "account" || detail === "schedule" || detail === "workspace") {
+      if (detail === "upgrade" || detail === "account" || detail === "schedule" || detail === "workspace" || detail === "agent-store") {
         setActiveModal(detail);
       }
     };
@@ -11333,24 +10969,12 @@ export default function WinnowAI(): React.ReactElement {
     }
   };
 
-  if (view === "agent-store") {
-    return (
-      <AgentStorePage
-        onClose={() => setView("app")}
-        onProvisionAgent={handleProvisionAgent}
-        agentsList={agentsList}
-        previewRole={previewRole}
-        setPreviewRole={setPreviewRole}
-      />
-    );
-  }
-
   return (
     <div className="w-full h-screen flex overflow-hidden"
       style={{ fontFamily: "Manrope, sans-serif", background: C.pageBg, color: C.text2 }}>
       <Sidebar screen={screen} setScreen={setScreen} collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} activeAgents={activeAgents}
         onStopAgent={(id: string) => setActiveAgents(prev => { const next = { ...prev }; delete next[id]; return next; })}
-        onOpenAgentStore={() => setView("agent-store")}
+        onOpenAgentStore={() => setActiveModal("agent-store")}
         onOpenModal={(m: any, tab?: string) => {
           setActiveModal(m);
           if (tab) setWorkspaceTab(tab);
@@ -11362,7 +10986,7 @@ export default function WinnowAI(): React.ReactElement {
         setChatHistory={setChatHistory} />
 
       <main className="flex-1 flex flex-col min-h-0 min-w-0 relative">
-        {!panelFull && (
+        {!panelActive && (
           <ScheduledTasksPill
             chatHistory={chatHistory}
             setChatHistory={setChatHistory}
@@ -11379,7 +11003,7 @@ export default function WinnowAI(): React.ReactElement {
           </motion.div>
         ) : (
           <motion.div key={`chat-${chatInitialMessage}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col min-h-0">
-            <ChatScreen initialMessage={chatInitialMessage} onActivity={setActiveAgents} onShare={() => setActiveModal("share")} panelFull={panelFull} setPanelFull={setPanelFull} />
+            <ChatScreen initialMessage={chatInitialMessage} onActivity={setActiveAgents} onShare={() => setActiveModal("share")} panelFull={panelFull} setPanelFull={setPanelFull} onPanelChange={setPanelActive} />
           </motion.div>
         )}
       </main>
@@ -11401,6 +11025,14 @@ export default function WinnowAI(): React.ReactElement {
         setSignatureHistory={setSignatureHistory}
       />
       <ScheduleModal isOpen={activeModal === "schedule"} onClose={() => setActiveModal(null)} showToast={showToast} schedules={schedules} setSchedules={setSchedules} />
+      <AgentStorePage
+        isOpen={activeModal === "agent-store"}
+        onClose={() => setActiveModal(null)}
+        onProvisionAgent={handleProvisionAgent}
+        agentsList={agentsList}
+        previewRole={previewRole}
+        setPreviewRole={setPreviewRole}
+      />
       {toastMessage && <ToastNotification message={toastMessage} onClose={() => setToastMessage(null)} />}
     </div>
   );
