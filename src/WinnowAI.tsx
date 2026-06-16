@@ -1,7 +1,7 @@
 import type { TemporalMode, AdvancedParams, AnalysisState, StepStatus, EvidenceStrength, SignalRow, Reference, InlineSeg, AnswerBlock, DrugSection, DrugInfo, ResultData, FlowComponent, ToolArg, ThoughtStep, AgentThought, ChatMessage, AgentConversation, FlowScriptStep, SynthesisStep, AgentActivity, RespLength, SegUnit, ForestRow, TrendPoint, QuarterlyCount, OnsetBucket, KMPoint, RiskCell, DemoFeature, ArtifactTab, ResultTab, WordTok, SubAgent } from "./WinnowData";
 import { C, DEFAULT_ADVANCED, AGENTS, FLOWS, MOCK_HISTORY, GREETINGS, WELCOME_PHRASES, SIGNAL_ROWS, ARTIFACT_QUERY, MOCK_CONVERSATIONS, REFERENCES, ANSWER_BLOCKS, DRUGS, SUGGESTED, SAFETY_STEPS, PLANNER_THOUGHT, DATA_THOUGHT, MEDICAL_THOUGHT, PHI_THOUGHT, TRACE_AGENTS, SYNTHESIS_SEQUENCE, STORE_TEMPLATES, COMMS_LOG, MAX_FILES, BEAM_MS, MONTHS, YEARS, DRUG_TAB_ORDER, SIGNAL_COLOR, CHART_SOURCES, FOREST_ROWS, TREND_DATA, QUARTERLY_COUNTS, ONSET_BUCKETS, KM_CURVE, RISK_SEVERITY, RISK_SIGNAL, RISK_COLORS, RISK_SIGNALS, CASE_DEMOGRAPHICS, MULTI_SIGNAL_ROWS, AGENT_PANEL_INTROS, PROMPT_CHIPS, RETRIEVAL_SOURCES, VALIDATION_METHODS, PRIVACY_OPS } from "./WinnowData";
 import * as React from "react";
-import { Grid, Settings, LayoutPanelTop, AudioLines, FileText, Calendar, Info, CircleHelp, LogOut, Pen, Clock, ShoppingBag, X, ChevronRight, ChevronDown, Sparkles, List, Paperclip, Upload, Download, Check, Shield, ExternalLink, TrendingUp, Minimize, Maximize, User, CreditCard, SlidersHorizontal, Bell, Monitor, Folder, Book, Lock, HelpCircle, Building2, Users, File, ChevronUp, Square, ArrowUp, Mic, Search, ArrowRight, Pencil, MessageCircle, Link, Share2, ThumbsUp, ThumbsDown, Copy, FilePlus, CirclePlus, Mail, LoaderCircle } from "lucide-react";
+import { Grid, Settings, LayoutPanelTop, AudioLines, FileText, Calendar, Info, CircleHelp, LogOut, Pen, Clock, ShoppingBag, X, ChevronRight, ChevronDown, List, Paperclip, Upload, Download, Check, Shield, ExternalLink, TrendingUp, Minimize, Maximize, User, CreditCard, SlidersHorizontal, Bell, Monitor, Folder, Book, Lock, HelpCircle, Building2, Users, File, ChevronUp, Square, ArrowUp, Mic, Search, ArrowLeft, ArrowRight, Pencil, MessageCircle, Link, Share2, ThumbsUp, ThumbsDown, Copy, FilePlus, CirclePlus, Mail, Plus, LoaderCircle, Triangle, Hexagon, Star, MoreHorizontal, GitMerge, GitBranch, GitPullRequest } from "lucide-react";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
@@ -929,9 +929,6 @@ function AgentStorePage({
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [configuringAgent, setConfiguringAgent] = useState<string | null>(null);
 
-  const [subAgentsExpanded, setSubAgentsExpanded] = useState(false);
-  const [discoverExpanded, setDiscoverExpanded] = useState(false);
-
   const [editorMode, setEditorMode] = useState<"create" | "edit" | "view" | "store-preview" | null>(null);
   const [selectedSubAgent, setSelectedSubAgent] = useState<any | null>(null);
   const [editorTemplate, setEditorTemplate] = useState<any | null>(null);
@@ -940,12 +937,8 @@ function AgentStorePage({
   const [selectedOriginFilter, setSelectedOriginFilter] = useState<string | null>(null);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (search.trim() !== "") {
-      setSubAgentsExpanded(true);
-      setDiscoverExpanded(true);
-    }
-  }, [search]);
+  const [activeTab, setActiveTab] = useState("all");
+  const [detailAgent, setDetailAgent] = useState<any | null>(null);
 
   const allSubAgents = useMemo(() => {
     return agentsList.flatMap(parent => 
@@ -959,42 +952,34 @@ function AgentStorePage({
 
   const filteredSubAgents = useMemo(() => {
     return allSubAgents.filter(sa => {
-      const searchMatch = sa.name.toLowerCase().includes(search.toLowerCase()) || 
-                          sa.desc.toLowerCase().includes(search.toLowerCase()) ||
-                          sa.parentName.toLowerCase().includes(search.toLowerCase());
+      const q = search.toLowerCase();
+      const searchMatch = !q || sa.name.toLowerCase().includes(q) || sa.desc.toLowerCase().includes(q) || sa.parentName.toLowerCase().includes(q);
       if (!searchMatch) return false;
-
       if (selectedParentFilter && sa.parentId !== selectedParentFilter) return false;
       if (selectedOriginFilter && sa.origin !== selectedOriginFilter) return false;
       if (selectedStatusFilter && sa.status !== selectedStatusFilter) return false;
-
       return true;
     });
   }, [allSubAgents, search, selectedParentFilter, selectedOriginFilter, selectedStatusFilter]);
 
-  const displaySubAgents = subAgentsExpanded ? filteredSubAgents : filteredSubAgents.slice(0, 3);
-
   const filteredTemplates = useMemo(() => {
-    return STORE_TEMPLATES.filter(t => 
-      t.name.toLowerCase().includes(search.toLowerCase()) || 
-      t.desc.toLowerCase().includes(search.toLowerCase()) ||
-      t.role.toLowerCase().includes(search.toLowerCase())
-    );
+    const q = search.toLowerCase();
+    return STORE_TEMPLATES.filter(t => !q || t.name.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q) || t.role.toLowerCase().includes(q));
   }, [search]);
 
-  const displayTemplates = discoverExpanded ? filteredTemplates : filteredTemplates.slice(0, 3);
+  const filteredBuiltIn = useMemo(() => {
+    const q = search.toLowerCase();
+    return AGENTS.filter(a => !q || a.name.toLowerCase().includes(q) || a.desc.toLowerCase().includes(q) || a.role.toLowerCase().includes(q));
+  }, [search]);
 
   const handleToggleParentFilter = (val: string) => {
     setSelectedParentFilter(prev => prev === val ? null : val);
-    setSubAgentsExpanded(true);
   };
   const handleToggleOriginFilter = (val: string) => {
     setSelectedOriginFilter(prev => prev === val ? null : val);
-    setSubAgentsExpanded(true);
   };
   const handleToggleStatusFilter = (val: string) => {
     setSelectedStatusFilter(prev => prev === val ? null : val);
-    setSubAgentsExpanded(true);
   };
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -1043,6 +1028,22 @@ function AgentStorePage({
     showToast(`Sub-agent transitioned via: ${transition}`);
   };
 
+  const handleCardClick = (agent: any) => {
+    setDetailAgent(agent);
+  };
+
+  // ── Detail overlay ──
+  if (detailAgent) {
+    return (
+      <AgentDetailOverlay
+        agent={detailAgent}
+        onBack={() => setDetailAgent(null)}
+        onClose={() => { setDetailAgent(null); onClose(); }}
+      />
+    );
+  }
+
+  // ── Agent Editor ──
   if (editorMode) {
     return (
       <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(15,23,42,0.40)", backdropFilter: "blur(4px)", padding: 16 }}>
@@ -1066,525 +1067,731 @@ function AgentStorePage({
     );
   }
 
-  return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(15,23,42,0.40)", backdropFilter: "blur(4px)", padding: 16 }}>
-      <div style={{ background: "#ffffff", borderRadius: 12, maxWidth: 1260, width: "100%", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", border: "1px solid #cbd5e1", maxHeight: "92vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <div style={{ display: "flex", flexDirection: "column", flex: 1, background: C.pageBg, fontFamily: "Manrope, sans-serif", overflow: "hidden" }}>
-      {/* toast notifications */}
-      {toastMessage && (
-        <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 100, background: "#1f2937", color: "#fff", padding: "10px 16px", borderRadius: 6, fontSize: 13.5, fontWeight: 500, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
-          {toastMessage}
-        </div>
-      )}
-
-      {/* Header */}
-      <div style={{ 
-        display: "flex", 
-        alignItems: "center", 
-        justifyContent: "space-between", 
-        padding: "16px 32px", 
-        borderBottom: `1px solid ${C.border}`, 
-        background: C.card, 
-        position: "sticky", 
-        top: 0, 
-        zIndex: 40, 
-        minHeight: 70 
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: C.text3, padding: "8px 12px", borderRadius: 6, display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 600 }}>
-            ← Back to chat
-          </button>
-          <div style={{ width: 1, height: 24, background: C.border }} />
-          <div>
-            <h1 style={{ fontSize: 18, fontWeight: 800, color: C.text1, margin: 0 }}>Agent Store</h1>
-            <p style={{ fontSize: 12, color: C.text4, margin: 0 }}>Extend your pipeline with governed sub-agents</p>
+  // ── Agent card helper ──
+  const AgentCard = ({ agent, onClick, badge, template }: { agent: any; onClick?: () => void; badge?: string; template?: boolean }) => {
+    const color = agent.color || agent.parentColor || "#059669";
+    const name = agent.name;
+    const role = agent.role || agent.parentName || "";
+    const desc = agent.desc;
+    const isLocked = template && agent.parent === "phi" && previewRole === "scientist";
+    return (
+      <div onClick={onClick} style={{ border: `1.5px solid ${isLocked ? "#fca5a5" : "#e4eaf2"}`, borderRadius: 10, padding: 14, background: isLocked ? "#fef2f2" : "#fff", cursor: onClick ? "pointer" : "default", display: "flex", flexDirection: "column", gap: 8, position: "relative", transition: "border-color 0.15s, box-shadow 0.15s" }}
+        onMouseEnter={e => { if (!isLocked) { e.currentTarget.style.borderColor = color; e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.06)"; } }}
+        onMouseLeave={e => { if (!isLocked) { e.currentTarget.style.borderColor = "#e4eaf2"; e.currentTarget.style.boxShadow = "none"; } }}
+      >
+        {badge && (
+          <div style={{ position: "absolute", top: 10, right: 10 }}>
+            <Badge variant={badge === "Built-in" ? "neutral" : badge === "Validated" ? "success" : badge === "In Review" ? "info" : "warning"} size="sm">{badge}</Badge>
           </div>
+        )}
+        {isLocked && (
+          <div style={{ position: "absolute", top: 10, right: 10, fontSize: 9, fontWeight: 700, color: "#b91c1c", background: "#fef2f2", border: "1px solid #fca5a5", padding: "2px 6px", borderRadius: 2, textTransform: "uppercase" }}>
+            Admin required
+          </div>
+        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: color }} />
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#222831" }}>{name}</span>
         </div>
-
-        {/* Preview as toggle */}
-        <div style={{ position: "relative" }}>
-          <button 
-            onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-            style={{ 
-              display: "flex", 
-              alignItems: "center", 
-              gap: 6, 
-              padding: "6px 12px", 
-              borderRadius: 12, 
-              border: `1.5px dashed ${C.brand}`, 
-              background: "transparent", 
-              color: C.text1, 
-              fontSize: 12, 
-              fontWeight: 600, 
-              cursor: "pointer" 
-            }}
-          >
-            <span style={{ color: C.brand }}>⊙</span> Preview as: {previewRole === "scientist" ? "Clinical Scientist" : "Workspace Admin"} ▾
-          </button>
-          {showRoleDropdown && (
-            <div style={{ 
-              position: "absolute", 
-              right: 0, 
-              top: "100%", 
-              marginTop: 6, 
-              background: C.card, 
-              border: `1px solid ${C.border}`, 
-              borderRadius: 6, 
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)", 
-              zIndex: 50, 
-              width: 180,
-              display: "flex",
-              flexDirection: "column",
-              padding: 4
-            }}>
-              <button 
-                onClick={() => { setPreviewRole("scientist"); setShowRoleDropdown(false); }}
-                style={{ 
-                  padding: "8px 12px", 
-                  textAlign: "left", 
-                  background: previewRole === "scientist" ? C.border : "transparent", 
-                  border: "none", 
-                  color: C.text1, 
-                  fontSize: 12, 
-                  borderRadius: 4, 
-                  cursor: "pointer",
-                  fontWeight: previewRole === "scientist" ? 600 : 400
-                }}
-              >
-                Clinical Scientist
-              </button>
-              <button 
-                onClick={() => { setPreviewRole("admin"); setShowRoleDropdown(false); }}
-                style={{ 
-                  padding: "8px 12px", 
-                  textAlign: "left", 
-                  background: previewRole === "admin" ? C.border : "transparent", 
-                  border: "none", 
-                  color: C.text1, 
-                  fontSize: 12, 
-                  borderRadius: 4, 
-                  cursor: "pointer",
-                  fontWeight: previewRole === "admin" ? 600 : 400
-                }}
-              >
-                Workspace Admin
-              </button>
-              <div style={{ borderTop: `1px solid ${C.border}`, margin: "4px 0" }} />
-              <div style={{ fontSize: 10, color: C.text5, padding: "4px 8px", lineHeight: 1.3 }}>
-                Demo control — role is normally assigned by your organization.
-              </div>
-            </div>
-          )}
-        </div>
+        <p style={{ fontSize: 10, fontWeight: 600, color: "#8090a6", margin: 0, textTransform: "uppercase", letterSpacing: "0.03em" }}>{role}</p>
+        <p style={{ fontSize: 11.5, color: "#486081", margin: 0, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{desc}</p>
       </div>
+    );
+  };
 
-      {/* Body */}
-      <div style={{ 
-        flex: 1, 
-        overflowY: "auto", 
-        padding: "32px 40px", 
-        maxWidth: 1200, 
-        margin: "0 auto", 
-        width: "100%", 
-        display: "flex", 
-        flexDirection: "column", 
-        gap: 40 
-      }}>
-          {/* SECTION 1: My Agents */}
-        <section>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: C.text4, margin: 0 }}>My Agents</h2>
-            <span style={{ fontSize: 11, color: C.text5 }}>Core Pipeline Architecture (4+1)</span>
+  // ── Main layout ──
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(15,23,42,0.40)", backdropFilter: "blur(4px)", padding: 16, fontFamily: "'Manrope', system-ui, sans-serif" }}>
+      <div style={{ background: "#ffffff", borderRadius: 12, maxWidth: 900, width: "100%", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", border: "1px solid #cbd5e1", height: 680, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        
+        {toastMessage && (
+          <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 200, background: "#1f2937", color: "#fff", padding: "10px 16px", borderRadius: 6, fontSize: 13.5, fontWeight: 500, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
+            {toastMessage}
           </div>
-          {/* TODO(ds): use DS Card + DS tokens for agent cards */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16, marginTop: 4 }}>
-            {AGENTS.filter(a => a.id !== "ui").map(a => (
-              <div
-                key={a.id}
-                style={{ border: `1.5px solid ${C.border}`, borderRadius: 10, padding: 16, background: C.card, cursor: "pointer", display: "flex", flexDirection: "column", gap: 10, position: "relative", transition: "all 0.2s" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = a.color; e.currentTarget.style.transform = "translateY(-2px)"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.transform = "none"; }}
+        )}
+
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderBottom: "1px solid #e4eaf2" }}>
+          <div>
+            <h1 style={{ fontSize: 18, fontWeight: 800, color: "#222831", margin: 0 }}>Agent Store</h1>
+            <p style={{ fontSize: 12, color: "#8090a6", margin: "2px 0 0" }}>Extend your pipeline with governed sub-agents</p>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Button variant="primary" size="sm" onClick={() => { setEditorMode("create"); setSelectedSubAgent(null); setEditorTemplate(null); }}>
+              <Plus size={14} /> Create agent
+            </Button>
+            <div style={{ position: "relative" }}>
+              <button onClick={() => setShowRoleDropdown(!showRoleDropdown)}
+                style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 6, border: "1px dashed #059669", background: "transparent", color: "#222831", fontSize: 11, fontWeight: 600, cursor: "pointer" }}
               >
-                <div style={{ position: "absolute", top: 12, right: 12 }}>
-                  <Badge variant="neutral" size="sm">Built-in</Badge>
+                <span style={{ color: "#059669" }}>⊙</span> {previewRole === "scientist" ? "Scientist" : "Admin"}
+              </button>
+              {showRoleDropdown && (
+                <div style={{ position: "absolute", right: 0, top: "100%", marginTop: 4, background: "#fff", border: "1px solid #e4eaf2", borderRadius: 6, boxShadow: "0 4px 12px rgba(0,0,0,0.15)", zIndex: 50, width: 160, display: "flex", flexDirection: "column", padding: 4 }}>
+                  <button onClick={() => { setPreviewRole("scientist"); setShowRoleDropdown(false); }} style={{ padding: "6px 10px", textAlign: "left", background: previewRole === "scientist" ? "#e4eaf2" : "transparent", border: "none", color: "#222831", fontSize: 11.5, borderRadius: 4, cursor: "pointer", fontWeight: previewRole === "scientist" ? 600 : 400 }}>Clinical Scientist</button>
+                  <button onClick={() => { setPreviewRole("admin"); setShowRoleDropdown(false); }} style={{ padding: "6px 10px", textAlign: "left", background: previewRole === "admin" ? "#e4eaf2" : "transparent", border: "none", color: "#222831", fontSize: 11.5, borderRadius: 4, cursor: "pointer", fontWeight: previewRole === "admin" ? 600 : 400 }}>Workspace Admin</button>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ width: 10, height: 10, borderRadius: "50%", background: a.color }} />
-                  <span style={{ fontSize: 13.5, fontWeight: 700, color: C.text1 }}>{a.name}</span>
-                </div>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 9.5, color: C.text4, fontWeight: 600 }}>{a.role}</span>
-                </div>
-                <p style={{ fontSize: 12, color: C.text4, margin: 0, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                  {a.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <div style={{ height: 1, background: C.border }} />
-
-        {/* SECTION 2: My Sub-Agents */}
-        <section style={{ position: "relative" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: C.text4, margin: 0 }}>
-                My Sub-Agents ({filteredSubAgents.length})
-              </h2>
+              )}
             </div>
+            <IconButton onClick={onClose} aria-label="Close"><X size={18} /></IconButton>
+          </div>
+        </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", border: `1px solid ${C.border}`, borderRadius: 6, background: C.card }}>
-                <Search size={13} color={C.text4} />
-                <input 
-                  value={search} 
-                  onChange={e => setSearch(e.target.value)} 
-                  placeholder="Search sub-agents by name, parent, or capability..."
-                  style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 13.5, color: C.text1 }} 
-                />
-              </div>
+        {/* Tabs + Search bar */}
+        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 0, padding: "0 24px", borderBottom: "1px solid #e4eaf2" }}>
+            {[
+              { id: "all", label: "All" },
+              { id: "my-agents", label: "My agents" },
+              { id: "sub-agents", label: "Sub-agents" },
+              { id: "from-store", label: "From Store" },
+            ].map(tab => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                  style={{ padding: "10px 14px", fontSize: 12.5, fontWeight: isActive ? 700 : 500, color: isActive ? "#059669" : "#486081", background: "transparent", border: "none", borderBottom: isActive ? "2px solid #059669" : "2px solid transparent", cursor: "pointer", transition: "color 0.15s, border-color 0.15s", whiteSpace: "nowrap" }}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+            <div style={{ flex: 1 }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", border: "1px solid #e4eaf2", borderRadius: 6, background: "#fff" }}>
+              <Search size={13} color="#8090a6" />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search agents..." style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 12.5, color: "#222831", width: 160, fontFamily: "'Manrope', system-ui, sans-serif" }} />
+            </div>
+          </div>
 
-              {/* Filter Chips Bar */}
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: C.text4 }}>Filter / Legend:</span>
-                
+          <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
+            {/* Filter chips */}
+            {(activeTab === "all" || activeTab === "sub-agents") && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16, alignItems: "center" }}>
+                <span style={{ fontSize: 10, fontWeight: 600, color: "#8090a6", textTransform: "uppercase", letterSpacing: "0.05em" }}>Filter:</span>
                 {["data", "medical", "phi"].map(p => {
-                  const label = p === "data" ? "↳ Data Compiler" : p === "medical" ? "↳ Medical Reviewer" : "↳ PHI Guard";
+                  const label = p === "data" ? "Data Compiler" : p === "medical" ? "Medical Reviewer" : "PHI Guard";
                   const color = p === "data" ? "#0891b2" : p === "medical" ? "#7c3aed" : "#d97706";
                   const active = selectedParentFilter === p;
                   return (
-                    <button 
-                      key={p}
-                      onClick={() => handleToggleParentFilter(p)}
-                      style={{ 
-                        fontSize: 10.5, 
-                        fontWeight: 600, 
-                        padding: "3px 8px", 
-                        borderRadius: 4, 
-                        border: `1.5px solid ${active ? color : C.border}`, 
-                        background: active ? `${color}15` : C.card, 
-                        color: active ? color : C.text3,
-                        cursor: "pointer"
-                      }}
-                    >
+                    <button key={p} onClick={() => handleToggleParentFilter(p)}
+                      style={{ fontSize: 10.5, fontWeight: 600, padding: "3px 8px", borderRadius: 4, border: `1.5px solid ${active ? color : "#e4eaf2"}`, background: active ? `${color}15` : "#fff", color: active ? color : "#486081", cursor: "pointer" }}>
                       {label}
                     </button>
                   );
                 })}
-
-                <div style={{ width: 1, height: 16, background: C.border }} />
-
+                <div style={{ width: 1, height: 14, background: "#e4eaf2" }} />
                 {["builtin", "store", "custom"].map(o => {
                   const label = o === "builtin" ? "Built-in" : o === "store" ? "From Store" : "Custom";
                   const active = selectedOriginFilter === o;
                   return (
-                    <button 
-                      key={o}
-                      onClick={() => handleToggleOriginFilter(o)}
-                      style={{ 
-                        fontSize: 10.5, 
-                        fontWeight: 600, 
-                        padding: "3px 8px", 
-                        borderRadius: 4, 
-                        border: `1.5px solid ${active ? C.brand : C.border}`, 
-                        background: active ? `${C.brand}15` : C.card, 
-                        color: active ? C.brand : C.text3,
-                        cursor: "pointer"
-                      }}
-                    >
+                    <button key={o} onClick={() => handleToggleOriginFilter(o)}
+                      style={{ fontSize: 10.5, fontWeight: 600, padding: "3px 8px", borderRadius: 4, border: `1.5px solid ${active ? "#059669" : "#e4eaf2"}`, background: active ? "#e6f4ee" : "#fff", color: active ? "#059669" : "#486081", cursor: "pointer" }}>
                       {label}
                     </button>
                   );
                 })}
-
-                <div style={{ width: 1, height: 16, background: C.border }} />
-
+                <div style={{ width: 1, height: 14, background: "#e4eaf2" }} />
                 {["sandbox", "review", "validated"].map(s => {
                   const label = s === "sandbox" ? "Sandbox" : s === "review" ? "In Review" : "Validated";
                   const color = s === "sandbox" ? "#d97706" : s === "review" ? "#2563eb" : "#10b981";
                   const active = selectedStatusFilter === s;
                   return (
-                    <button 
-                      key={s}
-                      onClick={() => handleToggleStatusFilter(s)}
-                      style={{ 
-                        fontSize: 10.5, 
-                        fontWeight: 600, 
-                        padding: "3px 8px", 
-                        borderRadius: 4, 
-                        border: `1.5px solid ${active ? color : C.border}`, 
-                        background: active ? `${color}15` : C.card, 
-                        color: active ? color : C.text3,
-                        cursor: "pointer"
-                      }}
-                    >
+                    <button key={s} onClick={() => handleToggleStatusFilter(s)}
+                      style={{ fontSize: 10.5, fontWeight: 600, padding: "3px 8px", borderRadius: 4, border: `1.5px solid ${active ? color : "#e4eaf2"}`, background: active ? `${color}15` : "#fff", color: active ? color : "#486081", cursor: "pointer" }}>
                       {label}
                     </button>
                   );
                 })}
               </div>
-            </div>
-          </div>
+            )}
 
-          <div style={{ position: "relative" }}>
-            <div style={{ 
-              display: "grid", 
-              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", 
-              gap: 16,
-              paddingBottom: (!subAgentsExpanded && filteredSubAgents.length > 3) ? 20 : 0
-            }}>
-              {displaySubAgents.map(sa => (
-                <div 
-                  key={sa.id}
-                  onClick={() => {
-                    setSelectedSubAgent(sa);
-                    if (sa.status === "review") {
-                      setEditorMode("view");
-                    } else if (sa.origin === "builtin") {
-                      setEditorMode(previewRole === "admin" ? "edit" : "view");
-                    } else {
-                      setEditorMode(previewRole === "admin" || sa.status === "sandbox" ? "edit" : "view");
-                    }
-                  }}
-                  style={{ 
-                    border: `1.5px solid ${C.border}`, 
-                    borderRadius: 10, 
-                    padding: 16, 
-                    background: C.card, 
-                    cursor: "pointer", 
-                    display: "flex", 
-                    flexDirection: "column", 
-                    gap: 10,
-                    position: "relative",
-                    transition: "all 0.2s"
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = sa.parentColor; e.currentTarget.style.transform = "translateY(-2px)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.transform = "none"; }}
-                >
-                  <div style={{ position: "absolute", top: 12, right: 12 }}>
-                    {sa.status === "validated" && sa.origin === "builtin" && <Badge variant="neutral" size="sm">Built-in</Badge>}
-                    {sa.status === "validated" && sa.origin !== "builtin" && <Badge variant="success" size="sm">Validated</Badge>}
-                    {sa.status === "review" && <Badge variant="info" size="sm">In Review</Badge>}
-                    {sa.status === "sandbox" && <Badge variant="warning" size="sm">Sandbox</Badge>}
+            {/* ── ALL tab ── */}
+            {activeTab === "all" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+                <section>
+                  <div style={{ marginBottom: 12 }}>
+                    <h2 style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#8090a6", margin: 0 }}>Core agents</h2>
+                    <p style={{ fontSize: 11.5, color: "#8090a6", margin: "2px 0 0" }}>Built-in pipeline agents</p>
                   </div>
-
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ width: 10, height: 10, borderRadius: "50%", background: sa.parentColor }} />
-                    <span style={{ fontSize: 13.5, fontWeight: 700, color: C.text1 }}>{sa.name}</span>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 12 }}>
+                    {filteredBuiltIn.map(a => (
+                      <AgentCard key={a.id} agent={a} onClick={() => handleCardClick(a)} badge="Built-in" />
+                    ))}
                   </div>
-
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 9.5, color: C.text4, fontWeight: 600 }}>↳ {sa.parentName}</span>
-                    <span style={{ fontSize: 9.5, background: "#f1f5f9", padding: "1px 4px", borderRadius: 2, color: C.text3, fontWeight: 500 }}>{sa.origin}</span>
+                </section>
+                {filteredSubAgents.length > 0 && (
+                  <section>
+                    <div style={{ marginBottom: 12 }}>
+                      <h2 style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#8090a6", margin: 0 }}>Sub-agents ({filteredSubAgents.length})</h2>
+                      <p style={{ fontSize: 11.5, color: "#8090a6", margin: "2px 0 0" }}>Custom governed nodes extending your pipeline</p>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 12 }}>
+                      {filteredSubAgents.map(sa => {
+                        const badge = sa.status === "validated" && sa.origin === "builtin" ? "Built-in" : sa.status === "validated" && sa.origin !== "builtin" ? "Validated" : sa.status === "review" ? "In Review" : sa.status === "sandbox" ? "Sandbox" : undefined;
+                        return (
+                          <AgentCard key={sa.id} agent={sa} badge={badge}
+                            onClick={() => {
+                              setSelectedSubAgent(sa);
+                              if (sa.status === "review") setEditorMode("view");
+                              else if (sa.origin === "builtin") setEditorMode(previewRole === "admin" ? "edit" : "view");
+                              else setEditorMode(previewRole === "admin" || sa.status === "sandbox" ? "edit" : "view");
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  </section>
+                )}
+                <section>
+                  <div style={{ marginBottom: 12 }}>
+                    <h2 style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#8090a6", margin: 0 }}>From Store</h2>
+                    <p style={{ fontSize: 11.5, color: "#8090a6", margin: "2px 0 0" }}>Premade regulatory templates</p>
                   </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 12 }}>
+                    {filteredTemplates.map(t => (
+                      <AgentCard key={t.name} agent={t} template onClick={() => { setEditorTemplate(t); setEditorMode("store-preview"); setSelectedSubAgent(null); }} />
+                    ))}
+                  </div>
+                </section>
+              </div>
+            )}
 
-                  <p style={{ fontSize: 12, color: C.text4, margin: 0, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                    {sa.desc}
-                  </p>
-                </div>
-              ))}
-            </div>
+            {/* ── MY AGENTS tab ── */}
+            {activeTab === "my-agents" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+                <section>
+                  <h2 style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#8090a6", margin: "0 0 12px" }}>Core agents</h2>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 12 }}>
+                    {filteredBuiltIn.map(a => (
+                      <AgentCard key={a.id} agent={a} onClick={() => handleCardClick(a)} badge="Built-in" />
+                    ))}
+                  </div>
+                </section>
+                {filteredSubAgents.filter(sa => sa.origin !== "store").length > 0 && (
+                  <section>
+                    <h2 style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#8090a6", margin: "0 0 12px" }}>Custom sub-agents</h2>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 12 }}>
+                      {filteredSubAgents.filter(sa => sa.origin !== "store").map(sa => (
+                        <AgentCard key={sa.id} agent={sa} onClick={() => handleCardClick(sa)} />
+                      ))}
+                    </div>
+                  </section>
+                )}
+              </div>
+            )}
 
-            {!subAgentsExpanded && filteredSubAgents.length > 3 && (
-              <div style={{ 
-                position: "absolute", 
-                bottom: 0, 
-                left: 0, 
-                right: 0, 
-                height: 50, 
-                background: `linear-gradient(to top, ${C.pageBg}, transparent)`, 
-                pointerEvents: "none" 
-              }} />
+            {/* ── SUB-AGENTS tab ── */}
+            {activeTab === "sub-agents" && (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 12 }}>
+                {filteredSubAgents.map(sa => {
+                  const badge = sa.status === "validated" && sa.origin === "builtin" ? "Built-in" : sa.status === "validated" && sa.origin !== "builtin" ? "Validated" : sa.status === "review" ? "In Review" : sa.status === "sandbox" ? "Sandbox" : undefined;
+                  return (
+                    <AgentCard key={sa.id} agent={sa} badge={badge}
+                      onClick={() => {
+                        setSelectedSubAgent(sa);
+                        if (sa.status === "review") setEditorMode("view");
+                        else if (sa.origin === "builtin") setEditorMode(previewRole === "admin" ? "edit" : "view");
+                        else setEditorMode(previewRole === "admin" || sa.status === "sandbox" ? "edit" : "view");
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            )}
+
+            {/* ── FROM STORE tab ── */}
+            {activeTab === "from-store" && (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 12 }}>
+                {filteredTemplates.map(t => (
+                  <AgentCard key={t.name} agent={t} template onClick={() => { setEditorTemplate(t); setEditorMode("store-preview"); setSelectedSubAgent(null); }} />
+                ))}
+              </div>
             )}
           </div>
+        </div>
 
-          {filteredSubAgents.length > 3 && (
-            <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
-              <button 
-                onClick={() => setSubAgentsExpanded(!subAgentsExpanded)}
-                style={{ 
-                  background: "transparent", 
-                  border: `1.5px solid ${C.border}`, 
-                  borderRadius: 12, 
-                  padding: "6px 16px", 
-                  fontSize: 12, 
-                  fontWeight: 600, 
-                  color: C.text2, 
-                  cursor: "pointer"
-                }}
-              >
-                {subAgentsExpanded ? "Show less" : `Show all (${filteredSubAgents.length})`}
-              </button>
-            </div>
-          )}
-        </section>
+        {configuringAgent && (() => {
+          const ag = agentsList.find(a => a.id === configuringAgent);
+          if (!ag) return null;
+          return (
+            <ConfigureAgentModal ag={ag} onClose={() => setConfiguringAgent(null)} onSave={(name) => { setConfiguringAgent(null); showToast(`Applied configuration for ${name}`); }} previewRole={previewRole} />
+          );
+        })()}
+      </div>
+    </div>
+  );
+}
 
-        <div style={{ height: 1, background: C.border }} />
+// ─── Agent Detail Overlay ─────────────────────────────────────────
+function AgentDetailOverlay({
+  agent,
+  onBack,
+  onClose,
+}: {
+  agent: any;
+  onBack: () => void;
+  onClose: () => void;
+}) {
+  const isSubAgent = !!(agent.parentId || agent.parentName);
+  const color = agent.color || agent.parentColor || "#059669";
+  const name = agent.name;
+  const role = agent.role || agent.parentName || "";
+  const desc = agent.desc;
+  const agentId = agent.id || agent.name;
+  const intro = AGENT_PANEL_INTROS[agentId] || (isSubAgent ? `Sub-agent of ${agent.parentName} — ${desc}` : `I am the ${name} agent. ${desc}`);
+  const subAgentCount = agent.subAgents ? agent.subAgents.length : 0;
+  const teammateAgents = AGENTS.filter(a => a.id !== agentId && a.id !== "ui");
+  const capability = agent.capability || "";
+  const parentAgent = isSubAgent ? AGENTS.find(a => a.id === agent.parentId) : null;
 
-        {/* SECTION 3: Discover / Store */}
-        <section style={{ position: "relative" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: C.text4, margin: 0 }}>Discover / Store</h2>
-            <span style={{ fontSize: 11, color: C.text5 }}>Premade regulatory templates</span>
+  const enrichment = getAgentEnrichment(agentId, capability, isSubAgent);
+  const instructions = enrichment.instructions;
+  const knowledgeSources = enrichment.knowledge;
+  const capabilities = enrichment.capabilities;
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 110, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(15,23,42,0.40)", backdropFilter: "blur(4px)", padding: 16, fontFamily: "'Manrope', system-ui, sans-serif" }}>
+      <div style={{ background: "#ffffff", borderRadius: 12, width: "100%", maxWidth: 900, boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", border: "1px solid #cbd5e1", height: 680, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", borderBottom: "1px solid #e4eaf2" }}>
+          <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 6, background: "transparent", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#486081", padding: "4px 8px", borderRadius: 6, transition: "background 0.15s" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "#f0f4f8"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+          >
+            <ArrowLeft size={16} /> Browse agents
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {!isSubAgent && (
+              <Button variant="primary" size="sm" onClick={onBack}>
+                <MessageCircle size={14} /> Open chat
+              </Button>
+            )}
+            <IconButton onClick={onClose} aria-label="Close"><X size={18} /></IconButton>
           </div>
+        </div>
 
-          <div style={{ position: "relative" }}>
-            <div style={{ 
-              display: "grid", 
-              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", 
-              gap: 16,
-              paddingBottom: (!discoverExpanded && filteredTemplates.length > 2) ? 20 : 0
-            }}>
-              {/* "+ New Agent" card */}
-              <div 
-                onClick={() => {
-                  setEditorMode("create");
-                  setSelectedSubAgent(null);
-                  setEditorTemplate(null);
-                }}
-                style={{
-                  border: `1.5px dashed ${C.brand}`,
-                  borderRadius: 10,
-                  padding: 16,
-                  background: "transparent",
-                  cursor: "pointer",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  minHeight: 140,
-                  transition: "all 0.2s"
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = `${C.brand}05`; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
-              >
-                <span style={{ fontSize: 24, color: C.brand }}>+</span>
-                <span style={{ fontSize: 13.5, fontWeight: 700, color: C.text1 }}>New Agent</span>
-                <span style={{ fontSize: 11, color: C.text4, textAlign: "center" }}>Create a custom governed node</span>
+        {/* Body */}
+        <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+
+          {/* Left column */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px", ...(isSubAgent ? {} : { borderRight: "1px solid #e4eaf2" }) }}>
+
+            {/* Avatar + name + role */}
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 20 }}>
+              {agent.sides ? (
+                <AgentIcon sides={agent.sides} color={color} size={48} />
+              ) : (
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: `${color}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <span style={{ fontSize: 20, color }}>{agent.icon ? "⚙" : "●"}</span>
+                </div>
+              )}
+              <div>
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: "#222831", margin: 0 }}>{name}</h2>
+                <p style={{ fontSize: 12.5, color: "#8090a6", margin: "4px 0 0" }}>{role}</p>
+              </div>
+            </div>
+
+            <p style={{ fontSize: 13, color: "#486081", lineHeight: 1.55, margin: "0 0 24px" }}>{desc}</p>
+
+            {/* Detail sections */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+              {/* About */}
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                  <Info size={14} color="#8090a6" />
+                  <h3 style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8090a6", margin: 0 }}>About</h3>
+                </div>
+                <p style={{ fontSize: 12.5, color: "#486081", margin: 0, lineHeight: 1.55 }}>{intro}</p>
               </div>
 
-              {displayTemplates.map((t, i) => {
-                const parentColor = t.parent === "data" ? "#0891b2" : t.parent === "medical" ? "#7c3aed" : "#d97706";
-                const isLocked = t.parent === "phi" && previewRole === "scientist";
-                return (
-                  <div 
-                    key={i}
-                    onClick={() => {
-                      setEditorTemplate(t);
-                      setEditorMode("store-preview");
-                      setSelectedSubAgent(null);
-                    }}
-                    style={{ 
-                      border: `1.5px solid ${C.border}`, 
-                      borderRadius: 10, 
-                      padding: 16, 
-                      background: C.card, 
-                      cursor: "pointer", 
-                      display: "flex", 
-                      flexDirection: "column", 
-                      justifyContent: "space-between", 
-                      gap: 12,
-                      position: "relative",
-                      transition: "all 0.2s"
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = parentColor; e.currentTarget.style.transform = "translateY(-2px)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.transform = "none"; }}
-                  >
-                    {isLocked && (
-                      <div style={{ position: "absolute", top: 12, right: 12, display: "flex", alignItems: "center", gap: 3, fontSize: 9, fontWeight: 700, color: "#b91c1c", background: "#fef2f2", border: "1px solid #fca5a5", padding: "2px 6px", borderRadius: 2, textTransform: "uppercase" }}>
-                        🔒 admin required
-                      </div>
-                    )}
-
-                    <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: parentColor }} />
-                        <span style={{ fontSize: 13.5, fontWeight: 700, color: C.text1 }}>{t.name}</span>
-                      </div>
-                      <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: parentColor, marginBottom: 8 }}>↳ {t.role}</p>
-                      <p style={{ fontSize: 12, color: C.text4, margin: 0, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                        {t.desc}
-                      </p>
-                    </div>
-
-                    <button 
-                      style={{ 
-                        marginTop: 4,
-                        alignSelf: "flex-start",
-                        padding: "4px 10px", 
-                        fontSize: 11.5, 
-                        fontWeight: 600, 
-                        borderRadius: 4, 
-                        border: `1px solid ${C.border}`, 
-                        background: "transparent", 
-                        color: C.text3, 
-                        cursor: "pointer" 
-                      }}
-                    >
-                      View Template
-                    </button>
+              {/* Reports to (sub-agents only) */}
+              {isSubAgent && parentAgent && (
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                    <GitMerge size={14} color="#8090a6" />
+                    <h3 style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8090a6", margin: 0 }}>Reports to</h3>
                   </div>
-                );
-              })}
-            </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", border: "1px solid #e4eaf2", borderRadius: 6 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: parentAgent.color }} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "#222831" }}>{parentAgent.name}</span>
+                    <span style={{ fontSize: 11, color: "#8090a6" }}>— {parentAgent.role}</span>
+                  </div>
+                </div>
+              )}
 
-            {!discoverExpanded && filteredTemplates.length > 2 && (
-              <div style={{ 
-                position: "absolute", 
-                bottom: 0, 
-                left: 0, 
-                right: 0, 
-                height: 50, 
-                background: `linear-gradient(to top, ${C.pageBg}, transparent)`, 
-                pointerEvents: "none" 
-              }} />
-            )}
+              {/* Knowledge */}
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                  <Book size={14} color="#8090a6" />
+                  <h3 style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8090a6", margin: 0 }}>Knowledge</h3>
+                </div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {knowledgeSources.map(src => (
+                    <span key={src} style={{ fontSize: 11, fontWeight: 600, color: "#059669", background: "#e6f4ee", padding: "3px 8px", borderRadius: 4 }}>{src}</span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Capabilities */}
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                  <Settings size={14} color="#8090a6" />
+                  <h3 style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8090a6", margin: 0 }}>Capabilities</h3>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  {capabilities.map((c, i) => (
+                    <div key={i} style={{ fontSize: 12, color: "#486081", padding: "4px 0", borderBottom: i < capabilities.length - 1 ? "1px solid #f0f4f8" : "none" }}>
+                      {c}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Skills (sub-agents for parent agents) */}
+              {subAgentCount > 0 && (
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                    <GitBranch size={14} color="#8090a6" />
+                    <h3 style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8090a6", margin: 0 }}>Skills ({subAgentCount})</h3>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    {agent.subAgents.map((sa: any) => (
+                      <div key={sa.name || sa.id} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 8px", border: "1px solid #e4eaf2", borderRadius: 6 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: color }} />
+                        <span style={{ fontSize: 12, fontWeight: 600, color: "#222831" }}>{sa.name}</span>
+                        <span style={{ fontSize: 10.5, color: "#8090a6", marginLeft: "auto" }}>{sa.capability}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Teammates */}
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                  <GitPullRequest size={14} color="#8090a6" />
+                  <h3 style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8090a6", margin: 0 }}>Teammates</h3>
+                </div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {teammateAgents.map(a => (
+                    <span key={a.id} style={{ fontSize: 11, fontWeight: 600, color: "#486081", padding: "4px 10px", borderRadius: 4, border: "1px solid #e4eaf2", display: "flex", alignItems: "center", gap: 4 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: a.color }} />
+                      {a.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Instructions — rich, multi-paragraph */}
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                  <FileText size={14} color="#8090a6" />
+                  <h3 style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#8090a6", margin: 0 }}>Instructions</h3>
+                </div>
+                <div style={{ fontSize: 12.5, color: "#486081", lineHeight: 1.6, borderLeft: "3px solid #e4eaf2", paddingLeft: 12 }}>
+                  {instructions.map((block: any, i: number) => {
+                    if (typeof block === "string") {
+                      return <p key={i} style={{ margin: "0 0 6px" }}>{block}</p>;
+                    }
+                    if (block.t === "list") {
+                      return (
+                        <ul key={i} style={{ margin: "0 0 8px", paddingLeft: 16 }}>
+                          {block.items.map((item: string, j: number) => (
+                            <li key={j} style={{ marginBottom: 2 }}>{item}</li>
+                          ))}
+                        </ul>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+              </div>
+
+            </div>
           </div>
 
-          {filteredTemplates.length > 2 && (
-            <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
-              <button 
-                onClick={() => setDiscoverExpanded(!discoverExpanded)}
-                style={{ 
-                  background: "transparent", 
-                  border: `1.5px solid ${C.border}`, 
-                  borderRadius: 12, 
-                  padding: "6px 16px", 
-                  fontSize: 12, 
-                  fontWeight: 600, 
-                  color: C.text2, 
-                  cursor: "pointer"
-                }}
-              >
-                {discoverExpanded ? "Show less" : `Show all (${filteredTemplates.length})`}
-              </button>
+          {/* Right column: Open chat — only for main agents */}
+          {!isSubAgent && (
+            <div style={{ width: 250, padding: "24px 20px", display: "flex", flexDirection: "column", gap: 16, flexShrink: 0 }}>
+              <h3 style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#8090a6", margin: 0 }}>Open chat</h3>
+              <p style={{ fontSize: 12, color: "#8090a6", margin: 0, lineHeight: 1.4 }}>
+                Start a conversation with <strong style={{ color: "#222831" }}>{name}</strong>.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {PROMPT_CHIPS.map(chip => (
+                  <button key={chip.label} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", border: "1px solid #e4eaf2", borderRadius: 8, background: "#fff", cursor: "pointer", fontSize: 12, color: "#364152", textAlign: "left", lineHeight: 1.3, transition: "border-color 0.15s, background 0.15s" }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = color; e.currentTarget.style.background = `${color}08`; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = "#e4eaf2"; e.currentTarget.style.background = "#fff"; }}
+                    onClick={() => { onClose(); }}
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
-        </section>
-      </div>
 
-      {/* Configure modal overlay */}
-      {configuringAgent && (() => {
-        const ag = agentsList.find(a => a.id === configuringAgent);
-        if (!ag) return null;
-        return (
-          <ConfigureAgentModal
-            ag={ag}
-            onClose={() => setConfiguringAgent(null)}
-            onSave={(name) => {
-              setConfiguringAgent(null);
-              showToast(`Applied configuration for ${name}`);
-            }}
-            previewRole={previewRole}
-          />
-        );
-      })()}
         </div>
       </div>
     </div>
   );
+
+  function getAgentEnrichment(id: string, cap: string, sub: boolean): { instructions: any[]; knowledge: string[]; capabilities: string[] } {
+    if (sub) {
+      return getSubAgentEnrichment(cap, agent);
+    }
+    return getMainAgentEnrichment(id);
+  }
+}
+
+function getSubAgentEnrichment(capability: string, agent: any): { instructions: any[]; knowledge: string[]; capabilities: string[] } {
+  const common = { knowledge: ["FAERS", "PubMed"], capabilities: ["REST API integration", "Structured output"] };
+
+  const registry: Record<string, { instructions: any[]; knowledge: string[]; capabilities: string[] }> = {
+    faers: {
+      instructions: [
+        "Purpose: Retrieves adverse event reports from the FDA Adverse Event Reporting System via the openFDA API.",
+        "Method: Constructs parameterized REST queries against https://api.fda.gov/drug/event.json with compound, date range, and severity filters.",
+        { t: "list", items: ["Parameters: search, limit, skip, count", "Pagination: max 100 records per request with cursor-based continuation", "Response format: structured JSON ICSR with patient demographics, drug information, reactions, and outcomes"] },
+        "Protocol: Respects openFDA rate limits (240 requests/min per API key). On 429 response, backs off exponentially (1s, 2s, 4s).",
+        "Output: Returns normalized JSON for downstream processing by Data Compiler and Medical Reviewer agents.",
+      ],
+      knowledge: ["FAERS", "openFDA API", "MedDRA", "ICSR schema"],
+      capabilities: ["REST API queries to openFDA", "Parameterized search by compound, date, seriousness", "Pagination with cursor continuation", "Exponential backoff rate limiting"],
+    },
+    eudra: {
+      instructions: [
+        "Purpose: Queries the European Medicines Agency EudraVigilance database for adverse reaction reports.",
+        "Method: Connects to EVWEB API endpoints with EEA-compliant authentication and retrieves ICSR data.",
+        { t: "list", items: ["Supported sections: Individual Case Safety Reports (ICSRs)", "Line listings and summary tabulations", "Data range: 2001–present"] },
+        "Protocol: Implements EudraVigilance access controls and data privacy safeguards mandated by EMA.",
+        "Output: Standardized safety data formatted for integration with Medical Reviewer signal detection.",
+      ],
+      knowledge: ["EudraVigilance", "EMA", "EVWEB API", "ICSR"],
+      capabilities: ["EVWEB API integration", "EEA-compliant authentication", "ICSR retrieval and parsing"],
+    },
+    vigiaccess: {
+      instructions: [
+        "Purpose: Accesses the WHO global database of adverse drug reactions maintained by the Uppsala Monitoring Centre.",
+        "Method: Calls VigiBase API endpoints using authorized credentials and structured query parameters.",
+        { t: "list", items: ["Coverage: 130+ member countries", "Data fields: drug, reaction, outcome, seriousness, country", "Timeline: reports from 1968 onward"] },
+        "Protocol: Complies with WHO programme data sharing policies and anonymization requirements.",
+        "Output: Returns globally aggregated safety data for population-level signal detection.",
+      ],
+      knowledge: ["VigiBase", "WHO", "UMC", "Global ICSR"],
+      capabilities: ["VigiBase API access", "Global adverse event aggregation", "Cross-country data retrieval"],
+    },
+    pubmed: {
+      instructions: [
+        "Purpose: Searches MEDLINE/PubMed for biomedical literature citations and abstracts via the NCBI E-utilities API.",
+        "Method: Constructs parameterized esearch/esummary/efetch calls against https://eutils.ncbi.nlm.nih.gov/entrez/eutils/.",
+        { t: "list", items: ["Query fields: title, abstract, author, journal, MeSH terms, publication date", "Supported filters: review articles, clinical trials, meta-analyses, free full text", "Sorting: relevance, publication date, first author"] },
+        "Protocol: Respects NCBI rate limits (3 requests/sec without API key, 10/sec with).",
+        "Output: Returns citation metadata (PMID, title, authors, journal, DOI, abstract) in structured format.",
+      ],
+      knowledge: ["PubMed", "MEDLINE", "NCBI E-utilities", "MeSH"],
+      capabilities: ["NCBI E-utilities search and fetch", "Advanced query construction", "Citation metadata extraction"],
+    },
+    clinicaltrials: {
+      instructions: [
+        "Purpose: Queries ClinicalTrials.gov for registered clinical study designs, status, and outcome results.",
+        "Method: Uses the AACT database or ClinicalTrials.gov API v2 with study-type, phase, status, and intervention filters.",
+        { t: "list", items: ["Study types: interventional, observational, expanded access", "Phases: I, II, III, IV, Not Applicable", "Status: recruiting, active not recruiting, completed, terminated", "Data: eligibility criteria, outcome measures, locations, sponsors"] },
+        "Protocol: Implements CT.gov terms of use; caches results to minimize API calls.",
+        "Output: Structured study records with NCT numbers, protocol details, and outcome summaries.",
+      ],
+      knowledge: ["ClinicalTrials.gov", "AACT Database", "NCT Registry", "Protocol Schema"],
+      capabilities: ["CT.gov API v2 queries", "Study design and status filtering", "Eligibility criteria extraction"],
+    },
+    europepmc: {
+      instructions: [
+        "Purpose: Retrieves open-access full-text articles and abstracts from the Europe PMC repository.",
+        "Method: Uses the Europe PMC RESTful API with query parameters for text mining and bibliographic search.",
+        { t: "list", items: ["Content: 40M+ abstracts, 7M+ full-text open access articles", "API endpoints: /search, /details, /references, /citations, /textMining", "Special features: citation networks, data citations, ORCID integration"] },
+        "Protocol: Public API with generous rate limits; supports bulk retrieval for analytics.",
+        "Output: Full-text XML/JSON with references, grants, and data links for evidence synthesis.",
+      ],
+      knowledge: ["Europe PMC", "Open Access", "PubMed Central", "Citation Network"],
+      capabilities: ["Europe PMC REST API", "Full-text retrieval", "Citation and reference mining"],
+    },
+    biorxiv: {
+      instructions: [
+        "Purpose: Searches bioRxiv and medRxiv preprint servers for recent life sciences and medical preprints.",
+        "Method: Uses the bioRxiv API with date range, subject category, and keyword filters.",
+        { t: "list", items: ["Categories: molecular biology, genomics, bioinformatics, pharmacology, epidemiology", "Filtering by DOI, author, or collection date", "Content: preprints prior to peer review, including updated versions"] },
+        "Protocol: API limited to narrow date windows (1–4 weeks) to prevent timeouts; performs local keyword filtering.",
+        "Output: Preprint metadata with authors, DOI, category, and abstract for rapid evidence scanning.",
+      ],
+      knowledge: ["bioRxiv", "medRxiv", "Preprint Servers"],
+      capabilities: ["bioRxiv API date-range search", "Category and keyword filtering", "Preprint metadata extraction"],
+    },
+    openalex: {
+      instructions: [
+        "Purpose: Queries the OpenAlex scholarly graph for research papers, authors, institutions, and topics.",
+        "Method: Uses the OpenAlex REST API with entity types (works, authors, sources, institutions, concepts).",
+        { t: "list", items: ["Entities: works (95M+), authors (15M+), sources (250K+), institutions (100K+), concepts (65K+)", "Filters: open access, publication year, cited by count, institution country", "Aggregations: citation counts by year, author h-index, journal impact factor"] },
+        "Protocol: Public API with per-key rate limits of 100K requests/day; supports bulk export.",
+        "Output: Rich scholarly metadata with citation metrics, topic hierarchy, and open-access URLs.",
+      ],
+      knowledge: ["OpenAlex", "Scholarly Graph", "Citation Metrics", "Research Topics"],
+      capabilities: ["OpenAlex REST API queries", "Multi-entity search (works, authors, concepts)", "Citation and bibliometric aggregation"],
+    },
+    disprop: {
+      instructions: [
+        "Purpose: Computes disproportionality metrics for pharmacovigilance signal detection from FAERS data.",
+        "Method: Applies statistical algorithms to case/non-case contingency tables for drug-event pairs.",
+        { t: "list", items: ["Algorithms: PRR (Proportional Reporting Ratio), ROR (Reporting Odds Ratio), BCPNN (Bayesian Confidence Propagation Neural Network), IC (Information Component)", "Thresholds: PRR >= 2, chi-squared >= 4, N >= 3 (Evans criteria)", "Stratification: by age, sex, country, reporter type, time period"] },
+        "Protocol: Implements CIOMS signal detection standards and ICH E2E guidelines.",
+        "Output: Signal tables with metric values, confidence intervals, and flagged signals for medical review.",
+      ],
+      knowledge: ["FAERS", "Disproportionality", "PRR/ROR", "BCPNN"],
+      capabilities: ["PRR calculation", "ROR calculation", "BCPNN Bayesian analysis", "Stratified analysis by demographics"],
+    },
+    chembl: {
+      instructions: [
+        "Purpose: Retrieves chemical structures, bioactivity data, and drug target information from ChEMBL.",
+        "Method: Queries the ChEMBL web resource API (chembl.gitbook.io) with compound/target/disease identifiers.",
+        { t: "list", items: ["Data: compound structures (Smiles, InChI), activity assays (IC50, Ki, EC50), target binding, drug mechanisms", "Entities: molecules (2.4M+), targets (14K+), assays (1.4M+), documents (90K+)", "Filters: activity type, assay organism, standard relation, pChEMBL value"] },
+        "Protocol: Public API with rate limiting; supports batch queries for multi-compound analysis.",
+        "Output: Structured bioactivity data with pChEMBL values, target confidence scores, and mechanism annotations.",
+      ],
+      knowledge: ["ChEMBL", "Chemical Structures", "Bioactivity", "Drug Targets"],
+      capabilities: ["ChEMBL API query by compound/target", "Bioactivity and assay data retrieval", "Structure-activity relationship search"],
+    },
+    qa: {
+      instructions: [
+        "Purpose: Validates and quality-checks pharmacovigilance signals before they enter the output pipeline.",
+        "Method: Runs a battery of validation rules against signal tables, confidence intervals, and data completeness.",
+        { t: "list", items: ["Validation rules: metric consistency, statistical significance, data sufficiency, duplicate detection", "Quality checks: missing values, outlier detection, temporal consistency", "Documentation: generates validation report with pass/fail for each criterion"] },
+        "Protocol: Implements GxP-compliant validation procedures and audit trail logging.",
+        "Output: Validation report with green/yellow/red status per signal, actionable recommendations for remediation.",
+      ],
+      knowledge: ["Quality Assurance", "Signal Validation", "Audit Trail", "GxP"],
+      capabilities: ["Automated validation rule execution", "Statistical consistency checking", "Validation report generation"],
+    },
+    genomics_validator: {
+      instructions: [
+        "Purpose: Validates genetic variants against ClinVar and gnomAD databases for clinical significance.",
+        "Method: Takes variant coordinates (chr, pos, ref, alt) and queries ClinVar via REST and gnomAD via GraphQL.",
+        { t: "list", items: ["ClinVar: clinical significance (pathogenic, benign, VUS), review status, condition associations", "gnomAD: allele frequency by population (global, AFR, EUR, EAS, SAS, AMR), quality metrics", "Validation: consistency check between sources, allele frequency vs. clinical significance"] },
+        "Protocol: Respects NCBI and gnomAD rate limits; caches results for repeated queries.",
+        "Output: Consolidated variant report with clinical classifications, population frequencies, and quality flags.",
+      ],
+      knowledge: ["ClinVar", "gnomAD", "Variant Databases", "Genomic Annotation"],
+      capabilities: ["ClinVar REST API queries", "gnomAD GraphQL queries", "Cross-source variant validation"],
+    },
+    pathway_analyst: {
+      instructions: [
+        "Purpose: Performs molecular pathway enrichment analysis on gene lists from safety or genomics outputs.",
+        "Method: Maps gene symbols to Reactome and KEGG pathways using over-representation analysis (ORA) and gene set enrichment analysis (GSEA).",
+        { t: "list", items: ["Pathways: Reactome (2,500+), KEGG (500+), GO Biological Process (30,000+ terms)", "Statistics: hypergeometric test, Benjamini-Hochberg FDR correction", "Output: pathway-level enrichment scores with FDR q-values and gene overlap details"] },
+        "Protocol: Uses standard bioinformatics ORA/GSEA methodologies with multiple testing correction.",
+        "Output: Ranked list of enriched pathways with p-values, q-values, and overlapping gene identifiers.",
+      ],
+      knowledge: ["Reactome", "KEGG", "GO", "Pathway Analysis"],
+      capabilities: ["Over-representation analysis", "Gene set enrichment analysis", "Multiple testing correction (BH FDR)"],
+    },
+    molecular_profiler: {
+      instructions: [
+        "Purpose: Profiles molecular interactions and expression patterns from pharmacogenomic data.",
+        "Method: Integrates data from multiple molecular databases (Open Targets, STRING, HPA) via their respective APIs.",
+        { t: "list", items: ["Open Targets: target-disease associations, known drugs, tractability", "STRING: protein-protein interaction networks with confidence scores", "HPA: tissue-specific protein expression and subcellular localization"] },
+        "Protocol: Sequential API calls with data fusion to build integrated molecular profiles.",
+        "Output: Multi-layer molecular profile with target-disease links, PPI networks, expression data, and drug mechanisms.",
+      ],
+      knowledge: ["Open Targets", "STRING", "HPA", "Molecular Profiles"],
+      capabilities: ["Target-disease association lookup", "Protein-protein interaction network retrieval", "Tissue expression profiling"],
+    },
+    ols_normalize: {
+      instructions: [
+        "Purpose: Normalizes free-text drug and disease terms to standard biomedical ontologies via the EMBL-EBI OLS.",
+        "Method: Queries the OLS API for term search, autocomplete, and hierarchy navigation across 250+ ontologies.",
+        { t: "list", items: ["Ontologies: EFO, MONDO, DOID, HPO, ChEBI, GO, NCBITaxon, Uberon, CL", "Operations: term search, exact match, hierarchy traversal (ancestors/children)", "Matching: fuzzy string matching with ontology term labels, synonyms, and definitions"] },
+        "Protocol: Implements best-effort matching with confidence scores; returns top candidates for disambiguation.",
+        "Output: Mapped ontology terms with CURIE/IRI, term label, ontology source, and match confidence.",
+      ],
+      knowledge: ["EMBL-EBI OLS", "Ontologies", "Term Mapping", "Biomedical Vocabulary"],
+      capabilities: ["OLS API search and autocomplete", "Multi-ontology term lookup", "Fuzzy string matching with confidence scoring"],
+    },
+    narrative_redact: {
+      instructions: [
+        "Purpose: Detects and redacts Protected Health Information (PHI) from unstructured clinical narratives.",
+        "Method: Applies pattern matching and named entity recognition (NER) to identify names, dates, locations, and identifiers.",
+        { t: "list", items: ["PHI categories: patient names, provider names, dates of service, geographic locations under 3 digits, SSN, MRN, email addresses, phone numbers", "Methods: regex patterns for structured PHI, context-aware NER for unstructured PHI", "Output: redacted text with PHI replaced by [REDACTED] placeholders and redaction log"] },
+        "Protocol: HIPAA Safe Harbor method (section 164.514(b)(2)) and GDPR Article 4(1) definition of personal data.",
+        "Output: Redacted narrative text plus a detailed redaction log listing each PHI instance found and its category.",
+      ],
+      knowledge: ["HIPAA", "GDPR", "PHI", "NER"],
+      capabilities: ["Pattern-based PHI detection", "Context-aware NER for unstructured text", "Redaction with audit log"],
+    },
+  };
+
+  return registry[capability] || {
+    instructions: [agent.desc || `Sub-agent for ${agent.parentName || "unknown parent"} with capability: ${capability}.`],
+    knowledge: ["FAERS", "PubMed"],
+    capabilities: ["API integration", "Structured data retrieval"],
+  };
+}
+
+function getMainAgentEnrichment(id: string): { instructions: any[]; knowledge: string[]; capabilities: string[] } {
+  const registry: Record<string, { instructions: string[]; knowledge: string[]; capabilities: string[] }> = {
+    planner: {
+      instructions: [
+        "Purpose: Orchestrates the end-to-end pharmacovigilance analysis pipeline by decomposing complex safety queries into executable subtasks.",
+        "Core responsibilities:",
+        { t: "list", items: ["Receive user queries and classify them by analysis type (signal detection, cohort, genomics, benefit-risk)", "Decompose queries into a directed acyclic graph of dependent subtasks", "Assign subtasks to specialized agents (Data Compiler, Medical Reviewer, PHI Guard)", "Monitor execution progress, handle failures, and consolidate results", "Generate structured synthesis reports with evidence quality annotations"] },
+        "Workflow: User input → Query classification → Task graph construction → Agent delegation → Result monitoring → Report synthesis.",
+        "Protocol: Implements a beam-search planning algorithm with configurable breadth (default 3 parallel paths) and rollback on failure.",
+      ],
+      knowledge: ["FAERS", "EudraVigilance", "PubMed", "ClinicalTrials.gov", "Signal Detection", "ICH E2E"],
+      capabilities: ["Query decomposition and planning", "Multi-agent orchestration", "Beam-search task execution", "Result synthesis and report generation"],
+    },
+    data: {
+      instructions: [
+        "Purpose: Retrieves and compiles pharmacovigilance evidence from multiple structured and unstructured data sources.",
+        "Core responsibilities:",
+        { t: "list", items: ["Query FAERS, EudraVigilance, and VigiBase for ICSR data on specified compounds", "Search PubMed, Europe PMC, bioRxiv, OpenAlex for relevant literature", "Fetch clinical trial records from ClinicalTrials.gov", "Normalize and deduplicate data from all sources into a unified schema", "Perform initial data quality checks (completeness, consistency, timeliness)"] },
+        "Coverage: 12+ data sources across regulatory databases, literature repositories, and clinical registries.",
+        "Protocol: Sequential source queries with configurable timeout (default 30s per source) and automatic retry on failure.",
+      ],
+      knowledge: ["FAERS", "EudraVigilance", "VigiBase", "PubMed", "Europe PMC", "ClinicalTrials.gov", "bioRxiv", "OpenAlex"],
+      capabilities: ["Multi-source evidence retrieval", "Data normalization and deduplication", "Configurable query construction", "Data quality validation"],
+    },
+    medical: {
+      instructions: [
+        "Purpose: Applies clinical reasoning and biomedical domain expertise to interpret safety signals and assess causality.",
+        "Core responsibilities:",
+        { t: "list", items: ["Run disproportionality analysis (PRR, ROR, BCPNN, IC) on compiled case counts", "Apply MedDRA classification and SOC/HLGT/PT hierarchy to reported adverse events", "Assess signal strength using Evans criteria and WHO-UMC causality categories", "Query ChEMBL for compound pharmacology and target binding data", "Perform pathway enrichment analysis (Reactome, KEGG) for mechanistic interpretation"] },
+        "Clinical validation: Each flagged signal is cross-referenced with published literature and known pharmacology.",
+        "Protocol: Multi-stage review pipeline — statistical filtering → clinical assessment → literature validation → severity tiering.",
+      ],
+      knowledge: ["MedDRA", "PRR/ROR", "BCPNN", "ChEMBL", "Reactome", "KEGG", "WHO-UMC", "CIOMS"],
+      capabilities: ["Disproportionality analysis (PRR, ROR, BCPNN)", "MedDRA coding and hierarchy traversal", "Pathway enrichment analysis", "Clinical causality assessment"],
+    },
+    phi: {
+      instructions: [
+        "Purpose: Ensures all outputs comply with HIPAA, GDPR, and other global privacy regulations for health data.",
+        "Core responsibilities:",
+        { t: "list", items: ["Scan all narrative and structured outputs for PHI/PII using NER and pattern matching", "Redact or anonymize identified PHI using Safe Harbor and expert determination methods", "Verify ontology term mappings via EBI OLS for drug and disease normalization", "Log all PHI findings and redaction actions in a compliance audit trail", "Provide compliance attestation for each output (HIPAA Privacy Rule §164.514, GDPR Art. 4(1))"] },
+        "Standard: Implements HIPAA Safe Harbor method (18 identifier removal) and GDPR pseudonymization requirements.",
+        "Protocol: Automated scanning at every output stage with manual override for edge cases requiring expert review.",
+      ],
+      knowledge: ["HIPAA", "GDPR", "PHI/PII", "EBI OLS", "Ontologies", "Compliance"],
+      capabilities: ["PHI/PII detection (NER + patterns)", "Automated redaction and anonymization", "Ontology normalization via EBI OLS", "Compliance audit trail generation"],
+    },
+  };
+
+  const entry = registry[id];
+  if (!entry) {
+    return {
+      instructions: [AGENT_PANEL_INTROS[id] || `Standard pipeline agent with safety analysis capabilities.`],
+      knowledge: ["FAERS", "PubMed"],
+      capabilities: ["Data retrieval", "Analysis", "Compliance"],
+    };
+  }
+
+  return entry;
 }
 
 // ─── User Menu Dropdown ───────────────────────────────────────────
@@ -1622,7 +1829,7 @@ function UserMenu({ onClose, onOpenAgentStore, onOpenModal, onLogout }: {
     {
       group: "records",
       icon: (
-        <LayoutPanelTop size={14} style={{ color: C.text3 }} />
+        <FileText size={14} style={{ color: C.text3 }} />
       ),
       label: "Compliance Reports",
       onClick: () => { onClose(); onOpenModal?.("workspace", "compliance"); },
@@ -1630,7 +1837,7 @@ function UserMenu({ onClose, onOpenAgentStore, onOpenModal, onLogout }: {
     {
       group: "records",
       icon: (
-        <AudioLines size={14} style={{ color: C.text3 }} />
+        <Monitor size={14} style={{ color: C.text3 }} />
       ),
       label: "Audit Logs",
       onClick: () => { onClose(); onOpenModal?.("workspace", "audit"); },
@@ -1638,7 +1845,7 @@ function UserMenu({ onClose, onOpenAgentStore, onOpenModal, onLogout }: {
     {
       group: "records",
       icon: (
-        <FileText size={14} style={{ color: C.text3 }} />
+        <User size={14} style={{ color: C.text3 }} />
       ),
       label: "Signature History",
       onClick: () => { onClose(); onOpenModal?.("workspace", "signatures"); },
@@ -1646,7 +1853,7 @@ function UserMenu({ onClose, onOpenAgentStore, onOpenModal, onLogout }: {
     {
       group: "knowledge",
       icon: (
-        <Calendar size={14} style={{ color: C.text3 }} />
+        <Book size={14} style={{ color: C.text3 }} />
       ),
       label: "FDA/EMA Guidelines",
       onClick: () => { onClose(); onOpenModal?.("workspace", "guidelines"); },
@@ -1654,7 +1861,7 @@ function UserMenu({ onClose, onOpenAgentStore, onOpenModal, onLogout }: {
     {
       group: "knowledge",
       icon: (
-        <Info size={14} style={{ color: C.text3 }} />
+        <Lock size={14} style={{ color: C.text3 }} />
       ),
       label: "HIPAA & Privacy",
       onClick: () => { onClose(); onOpenModal?.("workspace", "hipaa"); },
@@ -1662,7 +1869,7 @@ function UserMenu({ onClose, onOpenAgentStore, onOpenModal, onLogout }: {
     {
       group: "knowledge",
       icon: (
-        <CircleHelp size={14} style={{ color: C.text3 }} />
+        <HelpCircle size={14} style={{ color: C.text3 }} />
       ),
       label: "User Manual",
       onClick: () => { onClose(); onOpenModal?.("workspace", "manual"); },
@@ -1670,7 +1877,7 @@ function UserMenu({ onClose, onOpenAgentStore, onOpenModal, onLogout }: {
     {
       group: "knowledge",
       icon: (
-        <FileText size={14} style={{ color: C.text3 }} />
+        <Folder size={14} style={{ color: C.text3 }} />
       ),
       label: "Regulatory Docs",
       onClick: () => { onClose(); onOpenModal?.("workspace", "regdocs"); },
@@ -6432,10 +6639,31 @@ function FeedbackBar({
 }) {
   const [vote, setVote] = useState<"up" | "down" | null>(null);
   const [copied, setCopied] = useState(false);
+  const [csvClicked, setCsvClicked] = useState(false);
+  const [pdfClicked, setPdfClicked] = useState(false);
+  const [wordClicked, setWordClicked] = useState(false);
 
   const handleCopy = () => { onCopy(); setCopied(true); setTimeout(() => setCopied(false), 1800); };
 
-  const iconBtn = "w-8 h-8 rounded-lg flex items-center justify-center transition-all";
+  const handleExportCSV = () => {
+    onExportCSV();
+    setCsvClicked(true);
+    setTimeout(() => setCsvClicked(false), 1800);
+  };
+
+  const handleExportPDF = () => {
+    onExportPDF();
+    setPdfClicked(true);
+    setTimeout(() => setPdfClicked(false), 1800);
+  };
+
+  const handleExportWord = () => {
+    onExportWord();
+    setWordClicked(true);
+    setTimeout(() => setWordClicked(false), 1800);
+  };
+
+  const iconBtn = "w-8 h-8 rounded-lg flex items-center justify-center transition-all border-none cursor-pointer";
   return (
     <div className="flex items-center gap-3 flex-wrap mt-4 pt-4" style={{ borderTop: `1px solid ${C.border}` }}>
       {isSurveillance && (
@@ -6478,17 +6706,17 @@ function FeedbackBar({
             <Copy size={16} />
           )}
         </button>
-        <button aria-label="Download CSV" onClick={onExportCSV}
-          className={iconBtn} style={{ background: "transparent", color: C.text4 }}>
-          <FileText size={16} />
+        <button aria-label="Download CSV" onClick={handleExportCSV}
+          className={iconBtn} style={{ background: csvClicked ? C.brandSoft : "transparent", color: csvClicked ? C.brandText : C.text4 }}>
+          {csvClicked ? <Check size={16} /> : <FileText size={16} />}
         </button>
-        <button aria-label="Download PDF" onClick={onExportPDF}
-          className={iconBtn} style={{ background: "transparent", color: C.text4 }}>
-          <FilePlus size={16} />
+        <button aria-label="Download PDF" onClick={handleExportPDF}
+          className={iconBtn} style={{ background: pdfClicked ? C.brandSoft : "transparent", color: pdfClicked ? C.brandText : C.text4 }}>
+          {pdfClicked ? <Check size={16} /> : <FilePlus size={16} />}
         </button>
-        <button aria-label="Export to Word" onClick={onExportWord}
-          className={iconBtn} style={{ background: "transparent", color: C.text4 }}>
-          <File size={16} />
+        <button aria-label="Export to Word" onClick={handleExportWord}
+          className={iconBtn} style={{ background: wordClicked ? C.brandSoft : "transparent", color: wordClicked ? C.brandText : C.text4 }}>
+          {wordClicked ? <Check size={16} /> : <File size={16} />}
         </button>
       </div>
     </div>
@@ -10120,10 +10348,10 @@ function WorkspaceHipaaTab({ showToast }: WorkspaceHipaaTabProps): React.ReactEl
   const [openSection, setOpenSection] = useState<string | null>("handling");
 
   const statTiles = [
-    { label: "PHI Scans Run (30d)", value: "142", icon: "✓" },
-    { label: "Identifiers Redacted", value: "8,421", icon: "▲" },
-    { label: "k-Anonymity Floor", value: "k ≥ 6", icon: "⬡" },
-    { label: "Open PHI Exposures", value: "0", icon: "🔒" }
+    { label: "PHI Scans Run (30d)", value: "142", icon: <Check size={14} style={{ color: "#0d9488" }} /> },
+    { label: "Identifiers Redacted", value: "8,421", icon: <Triangle size={12} style={{ color: "#0d9488" }} /> },
+    { label: "k-Anonymity Floor", value: "k ≥ 6", icon: <Hexagon size={14} style={{ color: "#0d9488" }} /> },
+    { label: "Open PHI Exposures", value: "0", icon: <Lock size={14} style={{ color: "#d97706" }} /> }
   ];
 
   const policySections = [
@@ -10141,7 +10369,7 @@ function WorkspaceHipaaTab({ showToast }: WorkspaceHipaaTabProps): React.ReactEl
           <div key={i} style={{ border: "1px solid #cbd5e1", borderRadius: 6, padding: 14, background: "#f8fafc" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>{tile.label}</span>
-              <span style={{ fontSize: 14, color: "#0d9488" }}>{tile.icon}</span>
+              <span style={{ display: "flex", alignItems: "center" }}>{tile.icon}</span>
             </div>
             <p style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{tile.value}</p>
           </div>
@@ -10800,7 +11028,23 @@ export default function WinnowAI(): React.ReactElement {
   const DEFAULT_SIGNATURE = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNTAiIGhlaWdodD0iNTAiPjxwYXRoIGQ9Ik0xMCAzMCBRMzAgNSA2MCAyMCBUMTAwIDIwIFQxNDAgMTAiIHN0cm9rZT0iIzBmMTcyYSIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+PHRleHQgeD0iMTAiIHk9IjQwIiBmb250LWZhbWlseT0iY3Vyc2l2ZSIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzY0NzQ4YiI+UmF5YSBTdXJ5YTwvdGV4dD48L3N2Zz4=";
 
   // New States for Gaps
-  const [agentsList, setAgentsList] = useState<any[]>(AGENTS);
+  const [agentsList, setAgentsList] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem("winnow_agents_list");
+      return saved ? JSON.parse(saved) : AGENTS;
+    } catch (e) {
+      return AGENTS;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("winnow_agents_list", JSON.stringify(agentsList));
+    } catch (e) {
+      console.error("Failed to save agents list to localStorage", e);
+    }
+  }, [agentsList]);
+
   const [previewRole, setPreviewRole] = useState<"scientist" | "admin">("scientist");
   const [signatureText, setSignatureText] = useState(localStorage.getItem("winnow_sig") || DEFAULT_SIGNATURE);
   const [activeModal, setActiveModal] = useState<"upgrade" | "account" | "schedule" | "share" | "workspace" | "agent-store" | null>(null);

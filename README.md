@@ -1,70 +1,73 @@
-# WinnowAI
+# React + TypeScript + Vite
 
-**A responsible-AI, multi-agent workspace for pharmacovigilance signal detection.**
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-WinnowAI is a product-design prototype exploring how specialized AI agents can collaborate to detect
-drug-safety signals from post-market adverse-event data — with the transparency, human control, and
-audit traceability that regulated pharmacovigilance (PV) work demands.
+Currently, two official plugins are available:
 
-> ⚠️ **Prototype, not a production system.** This is a front-end design prototype with **mock data** —
-> there is no real LLM and no live calls to FAERS, EudraVigilance, or any external database. It exists
-> to demonstrate the interaction model and UX of a multi-agent PV workspace.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## Screenshots
+## React Compiler
 
-### 1. Collaborative Workspace
-![Workspace Interface](screenshots/workspace.png)
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-### 2. Consolidated Safety Report
-![Report Output](screenshots/report.png)
+## Expanding the ESLint configuration
 
-### 3. Interactive Forest Plot & Disproportionality Metrics
-![Charts split view](screenshots/charts.png)
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-### 4. Multi-Agent Configuration & Logs
-![Agents details](screenshots/agents.png)
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-## The idea: a 4+1 agent architecture
-A single LLM can't carry the whole PV pipeline — each step needs different expertise, data access, and
-trust boundaries. WinnowAI models **four specialist agents governed by one orchestrator**:
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
 
-- **Planner** (orchestrator) — decomposes the query and commands the specialists.
-- **Data Compiler** — retrieves and aggregates evidence (FAERS, EudraVigilance, VigiBase, PubMed,
-  Clinical Trials, Europe PMC, bioRxiv, OpenAlex) via parallel sub-agents.
-- **Medical Reviewer** — validates biological plausibility and computes disproportionality
-  (PRR / ROR / χ²), with genomics, pathway, and molecular sub-agents.
-- **PHI Guard** — de-identifies records (HIPAA Safe-Harbor) and normalizes terminology before
-  anything moves downstream.
-
-A deliberately hidden **UI Agent** renders findings and elicits input, kept off the visible roster to
-avoid cognitive overload.
-
-## What's in here
-- **Editable-sentence configuration** — analyses are configured as a plain-language sentence with
-  click-to-edit tokens, not forms or accordions.
-- **Visible reasoning** — each agent streams its chain-of-thought and tool calls.
-- **Evidence inspector** — AI summaries paired with raw source records for independent verification.
-- **Signal confidence breakdown** — Source Completeness · Statistical Strength · Biological
-  Plausibility, instead of a single opaque score.
-- **Continuous monitoring** — promote an analysis to a scheduled standing monitor.
-- **Governed Agent Store** — extend the pipeline with governed sub-agents under role-based,
-  change-controlled validation (Sandbox → In Review → Validated).
-- **Compliance & signature** — exportable audit trail and a regulatory sign-off flow.
-
-## Tech stack
-React 19 · Vite 8 · TypeScript · Tailwind CSS v4 · Framer Motion.
-
-## Run locally
-```bash
-npm install
-npm run dev      # start the dev server (Vite)
-npm run build    # production build
-npm run preview  # preview the build
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
 
-## Project structure
-- `src/WinnowAI.tsx` — the application (single-file product mock).
-- `src/WinnowData.ts` — mock data (agents, sources, sample analyses).
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-## Status
-Design prototype / portfolio piece. Built by Raya Surya.
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
