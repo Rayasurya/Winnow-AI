@@ -1,7 +1,7 @@
 import type { TemporalMode, AdvancedParams, AnalysisState, StepStatus, EvidenceStrength, SignalRow, Reference, InlineSeg, AnswerBlock, DrugSection, DrugInfo, ResultData, FlowComponent, ToolArg, ThoughtStep, AgentThought, ChatMessage, AgentConversation, FlowScriptStep, SynthesisStep, AgentActivity, RespLength, SegUnit, ForestRow, TrendPoint, QuarterlyCount, OnsetBucket, KMPoint, RiskCell, DemoFeature, ArtifactTab, ResultTab, WordTok, SubAgent } from "./WinnowData";
 import { C, DEFAULT_ADVANCED, AGENTS, FLOWS, MOCK_HISTORY, GREETINGS, WELCOME_PHRASES, SIGNAL_ROWS, ARTIFACT_QUERY, MOCK_CONVERSATIONS, REFERENCES, ANSWER_BLOCKS, DRUGS, SUGGESTED, SAFETY_STEPS, PLANNER_THOUGHT, DATA_THOUGHT, MEDICAL_THOUGHT, PHI_THOUGHT, TRACE_AGENTS, SYNTHESIS_SEQUENCE, STORE_TEMPLATES, COMMS_LOG, MAX_FILES, BEAM_MS, MONTHS, YEARS, DRUG_TAB_ORDER, SIGNAL_COLOR, CHART_SOURCES, FOREST_ROWS, TREND_DATA, QUARTERLY_COUNTS, ONSET_BUCKETS, KM_CURVE, RISK_SEVERITY, RISK_SIGNAL, RISK_COLORS, RISK_SIGNALS, CASE_DEMOGRAPHICS, MULTI_SIGNAL_ROWS, AGENT_PANEL_INTROS, PROMPT_CHIPS, RETRIEVAL_SOURCES, VALIDATION_METHODS, PRIVACY_OPS } from "./WinnowData";
 import * as React from "react";
-import { Grid, Settings, LayoutPanelTop, AudioLines, FileText, Calendar, Info, CircleHelp, LogOut, Pen, Clock, ShoppingBag, X, ChevronRight, ChevronDown, List, Paperclip, Upload, Download, Check, Shield, ExternalLink, TrendingUp, Minimize, Maximize, User, CreditCard, SlidersHorizontal, Bell, Monitor, Folder, Book, Lock, HelpCircle, Building2, Users, File, ChevronUp, Square, ArrowUp, Mic, Search, ArrowLeft, ArrowRight, Pencil, MessageCircle, Link, Share2, ThumbsUp, ThumbsDown, Copy, FilePlus, CirclePlus, Mail, Plus, LoaderCircle, Triangle, Hexagon, Star, MoreHorizontal, GitMerge, GitBranch, GitPullRequest } from "lucide-react";
+import { Grid, Settings, LayoutPanelTop, AudioLines, FileText, Calendar, Info, CircleHelp, LogOut, Pen, Clock, ShoppingBag, X, ChevronRight, ChevronDown, List, Paperclip, Upload, Download, Check, Shield, ExternalLink, TrendingUp, Minimize, Maximize, User, CreditCard, SlidersHorizontal, Bell, Monitor, Folder, Book, Lock, HelpCircle, Building2, Users, File, ChevronUp, Square, ArrowUp, Mic, Search, ArrowLeft, ArrowRight, Pencil, MessageCircle, Link, Share2, ThumbsUp, ThumbsDown, Copy, FilePlus, CirclePlus, Mail, Plus, LoaderCircle, Triangle, Hexagon, Star, MoreHorizontal, GitMerge, GitBranch, GitPullRequest, Code2 } from "lucide-react";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
@@ -193,15 +193,18 @@ function buildPlainSummary(data: ResultData, params: AnalysisState): string {
 
 // ─── Agent Status ─────────────────────────────────────────────────
 
-function AgentStatus({ agentId, state, thinkingLabel, generatingLabel, agentColor }: {
+function AgentStatus({ agentId, state, thinkingLabel, generatingLabel, agentColor, attempt }: {
   agentId?: string;
   state?: AgentActivity;
   thinkingLabel?: string;
   generatingLabel?: string;
   agentColor?: string;
+  attempt?: number;
 }) {
   const [dotCount, setDotCount] = useState(1);
-  const [attempt, setAttempt] = useState(1);
+  const [localAttempt, setLocalAttempt] = useState(1);
+
+  const effAttempt = attempt ?? localAttempt;
 
   useEffect(() => {
     if (!state) return;
@@ -210,7 +213,7 @@ function AgentStatus({ agentId, state, thinkingLabel, generatingLabel, agentColo
   }, [state]);
 
   useEffect(() => {
-    setAttempt(1);
+    setLocalAttempt(1);
   }, [agentId, state]);
 
   if (!state) {
@@ -221,6 +224,14 @@ function AgentStatus({ agentId, state, thinkingLabel, generatingLabel, agentColo
     return (
       <span className="text-[11px] font-medium" style={{ color: "#d97706" }}>
         User Needed{"·".repeat(dotCount)}
+      </span>
+    );
+  }
+
+  if (effAttempt > 1) {
+    return (
+      <span className="text-[11px]" style={{ color: C.text4 }}>
+        attempt {effAttempt} of 3
       </span>
     );
   }
@@ -2005,11 +2016,15 @@ function AgentCommsLogModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-function AgentRow({ a, activity, onStopAgent }: { a: typeof AGENTS[0]; activity?: AgentActivity; onStopAgent?: (id: string) => void }) {
+function AgentRow({ a, activity, onStopAgent, attempt }: {
+  a: typeof AGENTS[0]; activity?: AgentActivity; onStopAgent?: (id: string) => void; attempt?: number;
+}) {
   const [hovered, setHovered] = useState(false);
   return (
     <div className="flex items-center gap-2 px-2 py-2 rounded-lg transition-colors"
-      style={{ background: activity ? `${a.color}0d` : "transparent" }}
+      style={{
+        background: activity ? `${a.color}0d` : "transparent",
+      }}
       onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
       <AgentIcon sides={a.sides} color={a.color} size={20} pulse={!!activity} />
       <p className="text-[13px] font-semibold flex-1 truncate" style={{ color: activity ? C.text1 : C.text2 }}>{a.name}</p>
@@ -2019,7 +2034,7 @@ function AgentRow({ a, activity, onStopAgent }: { a: typeof AGENTS[0]; activity?
           <Square size={10} fill="currentColor" />
         </button>
       ) : (
-        <AgentStatus agentId={a.id} state={activity} thinkingLabel={a.thinkingLabel} generatingLabel={a.generatingLabel} agentColor={a.color} />
+        <AgentStatus agentId={a.id} state={activity} thinkingLabel={a.thinkingLabel} generatingLabel={a.generatingLabel} agentColor={a.color} attempt={attempt} />
       )}
     </div>
   );
@@ -2060,6 +2075,7 @@ function Sidebar({
   collapsed,
   setCollapsed,
   activeAgents = {},
+  agentAttempts = {},
   onStopAgent,
   onOpenAgentStore,
   onOpenModal,
@@ -2131,7 +2147,7 @@ function Sidebar({
                 const showSubs = !!activity && subAgents.length > 0;
                 return (
                   <div key={a.id}>
-                    <AgentRow a={a} activity={activity} onStopAgent={onStopAgent} />
+                    <AgentRow a={a} activity={activity} onStopAgent={onStopAgent} attempt={agentAttempts[a.id]} />
                     <AnimatePresence initial={false}>
                       {showSubs && (
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
@@ -2517,7 +2533,7 @@ function ChatInputBar({ onSend, placeholder = "Ask a follow-up question...", com
                 className="inline-flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center rounded-full"
                 style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}
               >
-                <Square size={16} fill="white" />
+                <Square size={16} stroke="white" fill="none" />
               </motion.button>
             ) : (value.trim() || files.length > 0) ? (
               <motion.button
@@ -2558,7 +2574,7 @@ function ChatInputBar({ onSend, placeholder = "Ask a follow-up question...", com
                 className="inline-flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center rounded-full"
                 style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}
               >
-                <Mic size={16} fill="white" />
+                <Mic size={16} stroke="white" fill="none" />
               </motion.button>
             )}
           </AnimatePresence>
@@ -6090,7 +6106,7 @@ function PlanningTrace({ onComplete, onActiveAgents, onTick, readOnly = false }:
               {phiCleared && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold"
                   style={{ background: "#dcfce7", color: "#15803d" }}>
-                  <CheckCircle size={11} />
+                  <Check size={11} />
                   PHI cleared
                 </span>
               )}
@@ -8004,6 +8020,126 @@ function AgentBubble({ agent, text, typing = false, component, locked = false, s
   );
 }
 
+// ─── Depth Limit Terminal Card ─────────────────────────────────────
+
+function DepthLimitTerminalCard({ onResolve }: { onResolve?: (decision: string) => void }) {
+  const [resolved, setResolved] = useState<string | null>(null);
+  const [freeText, setFreeText] = useState("");
+
+  const chips = [
+    "Treat as confounded (downgrade confidence)",
+    "Treat as drug-related (keep signal)",
+    "Flag for manual causality review",
+    "Other (type)",
+  ];
+
+  const handleChip = (chip: string) => {
+    if (resolved) return;
+    if (chip === "Other (type)") return;
+    setResolved(chip);
+    onResolve?.(chip);
+  };
+
+  const handleFreeText = () => {
+    if (!freeText.trim() || resolved) return;
+    setResolved(freeText.trim());
+    onResolve?.(freeText.trim());
+  };
+
+  const attempts = [
+    "Stratified by indication, signal persists in some, weakens in others. Inconclusive.",
+    "Adjusted for concomitant hepatotoxic medications. Partial attenuation, still ambiguous.",
+    "Checked dechallenge / rechallenge in narratives. Too few rechallenge cases to decide.",
+  ];
+
+  const planner = AGENTS[0];
+
+  return (
+    <div className="rounded-2xl border-2 overflow-hidden mb-5" style={{ borderColor: "#d97706", background: C.card, boxShadow: "0 4px 24px rgba(217,119,6,0.08)" }}>
+      {/* Header */}
+      <div className="flex items-center gap-3 px-5 py-3.5" style={{ background: "#fffbeb", borderBottom: "1px solid #fde68a" }}>
+        <AgentIcon sides={planner.sides} color={planner.color} size={24} />
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <span className="text-[13px] font-bold" style={{ color: planner.color }}>Planner</span>
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "#fef3c7", color: "#d97706" }}>
+              Action needed
+            </span>
+          </div>
+          <span className="text-[11.5px]" style={{ color: C.text4 }}>Relaying from Medical Reviewer</span>
+        </div>
+      </div>
+
+      <div className="p-5 flex flex-col gap-4">
+        {/* What I tried */}
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color: C.text4 }}>What I tried</p>
+          <div className="flex flex-col gap-1.5">
+            {attempts.map((a, i) => (
+              <div key={i} className="flex items-start gap-2 text-[13px]" style={{ color: C.text3 }}>
+                <span className="text-[11px] font-semibold mt-0.5 shrink-0" style={{ color: C.text4 }}>#{i + 1}</span>
+                <span>{a}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* What I couldn't resolve */}
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wider mb-1.5" style={{ color: C.text4 }}>What I couldn't resolve</p>
+          <p className="text-[13px] font-medium" style={{ color: C.text1 }}>I can't confidently separate the hepatotoxicity signal from confounding by indication.</p>
+        </div>
+
+        {/* Question + chips */}
+        <div>
+          <p className="text-[13px] font-bold mb-3" style={{ color: C.text1 }}>How should I treat this signal?</p>
+          {resolved ? (
+            <div className="flex items-center gap-2 text-[13px] font-medium" style={{ color: C.brand }}>
+              <Check size={16} />
+              <span>Decision recorded. Resuming...</span>
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-2">
+                {chips.slice(0, 3).map(chip => (
+                  <button key={chip} onClick={() => handleChip(chip)}
+                    className="text-[12.5px] font-semibold px-3.5 py-2 rounded-full transition-all duration-150"
+                    style={{
+                      background: "#fffbeb", border: "1px solid #fde68a", color: "#92400e",
+                      cursor: "pointer",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "#fef3c7"; e.currentTarget.style.borderColor = "#fcd34d"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "#fffbeb"; e.currentTarget.style.borderColor = "#fde68a"; }}>
+                    {chip}
+                  </button>
+                ))}
+              </div>
+              {/* Free-text fallback */}
+              <div className="flex gap-2 mt-3">
+                <input value={freeText} onChange={e => setFreeText(e.target.value)}
+                  placeholder="Type your decision..."
+                  className="text-[13px] flex-1 px-3 py-2 rounded-lg outline-none"
+                  style={{ border: "1px solid #fde68a", background: "#fffbeb", color: C.text1 }}
+                  onKeyDown={e => e.key === "Enter" && handleFreeText()} />
+                <button onClick={handleFreeText} disabled={!freeText.trim()}
+                  className="text-[12.5px] font-semibold px-4 py-2 rounded-lg"
+                  style={{ background: "#d97706", color: "#fff", border: "none", cursor: freeText.trim() ? "pointer" : "not-allowed", opacity: freeText.trim() ? 1 : 0.5 }}>
+                  Send
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="px-5 py-2.5" style={{ background: "#fafafa", borderTop: "1px solid #f0f0f0" }}>
+        <p className="text-[10.5px]" style={{ color: C.text5 }}>This pause is logged to the audit ledger.</p>
+      </div>
+    </div>
+  );
+}
+
 function TypingDots({ color }: { color: string }) {
   return (
     <div className="flex gap-1.5 py-0.5">
@@ -8224,13 +8360,15 @@ function parseQueryToConfig(query: string): AnalysisState {
 }
 
 // ─── Chat Screen (step-gated Safety Signal Detection flow) ────────
-function ChatScreen({ initialMessage, onActivity, onShare, panelFull, setPanelFull, onPanelChange }: {
+function ChatScreen({ initialMessage, onActivity, onShare, panelFull, setPanelFull, onPanelChange, depthLimitDemo, onDepthLimitResolve }: {
   initialMessage: string;
   onActivity?: (m: Record<string, AgentActivity>) => void;
   onShare?: () => void;
   panelFull: boolean;
   setPanelFull: React.Dispatch<React.SetStateAction<boolean>>;
   onPanelChange?: (active: boolean) => void;
+  depthLimitDemo?: boolean;
+  onDepthLimitResolve?: () => void;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [typing, setTyping] = useState<string | null>(null);
@@ -8369,7 +8507,9 @@ function ChatScreen({ initialMessage, onActivity, onShare, panelFull, setPanelFu
       const mockConv = MOCK_CONVERSATIONS[initialMessage];
       if (mockConv && mockConv.messages && mockConv.messages.length > 0) {
         // Load mock conversation instantly — no streaming animation
-        setMessages(mockConv.messages.map(m => ({ ...m, noStream: true, locked: true })));
+        setMessages(mockConv.messages
+          .filter(m => !depthLimitDemo || !(m.component?.kind === "result-tabs"))
+          .map(m => ({ ...m, noStream: true, locked: true })));
         setArtifact(mockConv.artifact);
         onPanelChange?.(!!mockConv.artifact);
         nextStepRef.current = mockConv.messages.length;
@@ -8756,7 +8896,7 @@ function ChatScreen({ initialMessage, onActivity, onShare, panelFull, setPanelFu
           <div ref={scrollRef} onScroll={handleChatScroll} className="flex-1 overflow-y-auto px-5 py-7"
             style={{ background: "radial-gradient(ellipse 80% 60% at 50% 30%, #ffffff 0%, #f7fafc 100%)", scrollbarWidth: "thin", scrollbarColor: `${C.border} transparent` }}>
             <div className="mx-auto w-full" style={{ maxWidth: artifact ? "100%" : 680 }}>
-              {messages.map(m =>
+              {messages.filter(m => !depthLimitDemo || m.component?.kind !== "result-tabs").map(m =>
                 m.type === "user"
                   ? <UserBubble key={m.id} text={m.text!} agentThread={m.agentThread} />
                   : <AgentBubble key={m.id} agent={m.agent!} text={m.text} component={m.component}
@@ -8774,6 +8914,7 @@ function ChatScreen({ initialMessage, onActivity, onShare, panelFull, setPanelFu
                       onPatchState={handlePatchState} />
               )}
               {typing && <AgentBubble agent={typing} typing />}
+              {depthLimitDemo && <DepthLimitTerminalCard onResolve={onDepthLimitResolve} />}
             </div>
           </div>
 
@@ -11024,6 +11165,37 @@ export default function WinnowAI(): React.ReactElement {
   const [panelActive, setPanelActive] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeAgents, setActiveAgents] = useState<Record<string, AgentActivity>>({});
+  const [depthLimitDemo, setDepthLimitDemo] = useState(false);
+  const [agentAttempts, setAgentAttempts] = useState<Record<string, number>>({});
+  const [depthLimitResolved, setDepthLimitResolved] = useState(false);
+
+  useEffect(() => {
+    if (!depthLimitDemo) {
+      setAgentAttempts({});
+      return;
+    }
+    setActiveAgents({ medical: "thinking" });
+    setAgentAttempts({ medical: 2 });
+    const t1 = setTimeout(() => {
+      setAgentAttempts({ medical: 3 });
+    }, 1200);
+    const t2 = setTimeout(() => {
+      setAgentAttempts({});
+      setActiveAgents({ medical: "user-needed", planner: "user-needed" });
+    }, 2400);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [depthLimitDemo]);
+
+  // Hidden toggle: press Shift+D to toggle depth-limit demo
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.shiftKey && (e.key === "D" || e.key === "d")) {
+        setDepthLimitDemo(d => !d);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   const DEFAULT_SIGNATURE = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNTAiIGhlaWdodD0iNTAiPjxwYXRoIGQ9Ik0xMCAzMCBRMzAgNSA2MCAyMCBUMTAwIDIwIFQxNDAgMTAiIHN0cm9rZT0iIzBmMTcyYSIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+PHRleHQgeD0iMTAiIHk9IjQwIiBmb250LWZhbWlseT0iY3Vyc2l2ZSIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzY0NzQ4YiI+UmF5YSBTdXJ5YTwvdGV4dD48L3N2Zz4=";
 
@@ -11217,6 +11389,7 @@ export default function WinnowAI(): React.ReactElement {
     <div className="w-full h-screen flex overflow-hidden"
       style={{ fontFamily: "Manrope, sans-serif", background: C.pageBg, color: C.text2 }}>
       <Sidebar screen={screen} setScreen={setScreen} collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} activeAgents={activeAgents}
+        agentAttempts={agentAttempts}
         onStopAgent={(id: string) => setActiveAgents(prev => { const next = { ...prev }; delete next[id]; return next; })}
         onOpenAgentStore={() => setActiveModal("agent-store")}
         onOpenModal={(m: any, tab?: string) => {
@@ -11247,7 +11420,7 @@ export default function WinnowAI(): React.ReactElement {
           </motion.div>
         ) : (
           <motion.div key={`chat-${chatInitialMessage}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col min-h-0">
-            <ChatScreen initialMessage={chatInitialMessage} onActivity={setActiveAgents} onShare={() => setActiveModal("share")} panelFull={panelFull} setPanelFull={setPanelFull} onPanelChange={setPanelActive} />
+            <ChatScreen initialMessage={chatInitialMessage} onActivity={setActiveAgents} onShare={() => setActiveModal("share")} panelFull={panelFull} setPanelFull={setPanelFull} onPanelChange={setPanelActive} depthLimitDemo={depthLimitDemo} onDepthLimitResolve={() => setDepthLimitResolved(true)} />
           </motion.div>
         )}
       </main>
