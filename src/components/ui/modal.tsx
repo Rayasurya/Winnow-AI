@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { useEffect, useLayoutEffect, useRef } from "react";
 import { Button } from "./button-1";
 import type { ButtonProps } from "./button-1";
@@ -39,7 +40,7 @@ const ModalModal = ({ active, onClickOutside, children, sticky, initialFocusRef 
         }
       }
     }
-  }, [active, initialFocusRef?.current]);
+  }, [active, initialFocusRef]);
 
   useEffect(() => {
     if (!active) {

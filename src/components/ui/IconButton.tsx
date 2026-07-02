@@ -5,7 +5,7 @@
 //   <IconButton size="lg" onClick={...}><X size={20} /></IconButton>  // close/X buttons
 
 import React from "react";
-import { radius, font, C } from "../../design/tokens";
+import { radius, C } from "../../design/tokens";
 
 type Size = "sm" | "md" | "lg";
 

@@ -6,7 +6,7 @@
 
 import React from "react";
 import { Spinner } from "./spinner-1";
-import { radius, spacing, font, shadow as s, C } from "../../design/tokens";
+import { radius, spacing, font, C } from "../../design/tokens";
 
 type Variant = "primary" | "secondary" | "tertiary" | "danger" | "premium";
 type Size = "sm" | "md" | "lg";
@@ -56,7 +56,8 @@ const Button = ({
       disabled={isDisabled}
       onClick={onClick}
       style={{
-        display: "inline-flex",
+        display: fullWidth ? "flex" : "inline-flex",
+        width: fullWidth ? "100%" : "auto",
         alignItems: "center",
         justifyContent: "center",
         gap: spacing[2],

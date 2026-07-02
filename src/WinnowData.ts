@@ -1,3 +1,4 @@
+/* eslint-disable */
 export const C = {
       pageBg:    "#F7FAFC",
       sidebar:   "#FFFFFF",

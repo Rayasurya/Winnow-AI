@@ -16,6 +16,7 @@ import Badge from "./components/ui/Badge";
 import Pill from "./components/ui/Pill";
 import Radio from "./components/ui/Radio";
 import Checkbox from "./components/ui/Checkbox";
+import { getLedger, appendEntry, verifyIntegrity } from "./services/AuditService";
 
 // ─── Fonts ────────────────────────────────────────────────────────
 const fontLink = document.createElement("link");
@@ -8489,7 +8490,7 @@ function ChatScreen({ initialMessage, onActivity, onShare, panelFull, setPanelFu
     const step = SAFETY_STEPS[stepIdx];
     setIsAnalyzing(true);
     setTypingAgent(step.agentId);
-    setTimeout(() => {
+    setTimeout(async () => {
       setTypingAgent(null);
       const id = ++idRef.current;
       setMessages(prev => [...prev, {
@@ -8498,8 +8499,30 @@ function ChatScreen({ initialMessage, onActivity, onShare, panelFull, setPanelFu
         component: step.getComponent?.(state),
         locked: false,
       }]);
+
+      const actorName = step.agentId === "planner" ? "Planner (Agent)" : 
+                        step.agentId === "medical" ? "Medical Reviewer (Agent)" : 
+                        step.agentId === "phi" ? "PHI Guard (Agent)" : `${step.agentId} (Agent)`;
+      
+      const actionName = step.agentId === "phi" ? "PHI scan" : 
+                         step.agentId === "medical" ? "ClinVar lookup" : "Flow instantiated";
+      
+      const targetName = state.activeSignal?.signal || "Safety Data Flow";
+      
+      const ipAddr = step.agentId === "planner" ? "Agent Node D" : 
+                     step.agentId === "phi" ? "Agent Node A" : 
+                     step.agentId === "medical" ? "Agent Node C" : "Agent Node B";
+
+      const updatedLedger = await appendEntry(
+        auditLogs,
+        actorName,
+        actionName,
+        targetName,
+        ipAddr
+      );
+      setAuditLogs(updatedLedger);
     }, step.typingMs);
-  }, [setTypingAgent]);
+  }, [setTypingAgent, auditLogs]);
 
   useEffect(() => {
     try {
@@ -10120,13 +10143,15 @@ function WorkspaceComplianceTab({ showToast }: WorkspaceComplianceTabProps): Rea
 
 interface WorkspaceAuditTabProps {
   showToast: (m: string) => void;
+  auditLogsList: any[];
 }
 
-function WorkspaceAuditTab({ showToast }: WorkspaceAuditTabProps): React.ReactElement {
+function WorkspaceAuditTab({ showToast, auditLogsList }: WorkspaceAuditTabProps): React.ReactElement {
   const [actorFilter, setActorFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [verificationStatus, setVerificationStatus] = useState<"unchecked" | "valid" | "invalid">("unchecked");
 
-  const filteredLogs = MOCK_AUDIT_LOGS.filter(l => {
+  const filteredLogs = auditLogsList.filter(l => {
     if (actorFilter !== "all") {
       const isAgent = l.actor.includes("Agent") || l.actor.includes("Daemon");
       if (actorFilter === "user" && isAgent) return false;
@@ -10139,12 +10164,36 @@ function WorkspaceAuditTab({ showToast }: WorkspaceAuditTabProps): React.ReactEl
     return true;
   });
 
+  const displayLogs = [...filteredLogs].reverse();
+
+  const handleVerifyIntegrity = async () => {
+    const isValid = await verifyIntegrity(auditLogsList);
+    setVerificationStatus(isValid ? "valid" : "invalid");
+    showToast(isValid ? "Audit ledger cryptographic chain fully verified." : "ALERT: Audit ledger chain verification failed!");
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, height: "100%" }}>
       {/* Tamper banner */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 6 }}>
-        <Shield size={16} stroke="#16a34a" strokeWidth={2.5} />
-        <span style={{ fontSize: 12.5, color: "#15803d", fontWeight: 600 }}>SHA-256 integrity-chained audit logs · 21 CFR Part 11 Compliance Ledger</span>
+      <div style={{ 
+        display: "flex", 
+        alignItems: "center", 
+        gap: 8, 
+        padding: "10px 14px", 
+        backgroundColor: verificationStatus === "valid" ? "#f0fdf4" : verificationStatus === "invalid" ? "#fef2f2" : "#f8fafc", 
+        border: `1px solid ${verificationStatus === "valid" ? "#bbf7d0" : verificationStatus === "invalid" ? "#fecaca" : "#e2e8f0"}`, 
+        borderRadius: 6 
+      }}>
+        <Shield size={16} stroke={verificationStatus === "valid" ? "#16a34a" : verificationStatus === "invalid" ? "#dc2626" : "#64748b"} strokeWidth={2.5} />
+        <span style={{ 
+          fontSize: 12.5, 
+          color: verificationStatus === "valid" ? "#15803d" : verificationStatus === "invalid" ? "#b91c1c" : "#475569", 
+          fontWeight: 600 
+        }}>
+          {verificationStatus === "valid" ? "CRYPTOGRAPHIC INTEGRITY VERIFIED · Ledger Chain Intact" : 
+           verificationStatus === "invalid" ? "WARNING: LEDGER INTEGRITY COMPROMISED · Chain Link Broken" : 
+           "SHA-256 integrity-chained audit logs · 21 CFR Part 11 Compliance Ledger"}
+        </span>
       </div>
 
       {/* Filter and Search */}
@@ -10163,7 +10212,26 @@ function WorkspaceAuditTab({ showToast }: WorkspaceAuditTabProps): React.ReactEl
           <label style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Actor Class</label>
           <Select value={actorFilter} onChange={setActorFilter} options={[{label:"All Actors",value:"all"},{label:"User Actions Only",value:"user"},{label:"Agent Pipeline Only",value:"agent"}]} />
         </div>
-        <div style={{ alignSelf: "flex-end" }}>
+        <div style={{ alignSelf: "flex-end", display: "flex", gap: 8 }}>
+          <button 
+            onClick={handleVerifyIntegrity}
+            style={{ 
+              padding: "6px 12px", 
+              fontSize: 12.5, 
+              fontWeight: 600, 
+              border: `1px solid ${verificationStatus === "valid" ? "#16a34a" : verificationStatus === "invalid" ? "#dc2626" : C.border}`, 
+              borderRadius: 4, 
+              background: verificationStatus === "valid" ? "#f0fdf4" : verificationStatus === "invalid" ? "#fef2f2" : "#fff", 
+              color: verificationStatus === "valid" ? "#16a34a" : verificationStatus === "invalid" ? "#dc2626" : C.text2, 
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 6
+            }}
+          >
+            <Shield size={14} />
+            {verificationStatus === "valid" ? "Verified Intact" : verificationStatus === "invalid" ? "Verification Failed" : "Verify Integrity"}
+          </button>
           <button 
             onClick={() => showToast("Exporting cryptographic audit log (CSV)...")}
             style={{ padding: "6px 12px", fontSize: 12.5, fontWeight: 600, border: `1px solid ${C.border}`, borderRadius: 4, background: "#fff", color: C.text2, cursor: "pointer" }}
@@ -10187,7 +10255,7 @@ function WorkspaceAuditTab({ showToast }: WorkspaceAuditTabProps): React.ReactEl
             </tr>
           </thead>
           <tbody>
-            {filteredLogs.map((l, i) => (
+            {displayLogs.map((l, i) => (
               <tr key={i} style={{ borderBottom: "1px solid #f1f5f9" }}>
                 <td style={{ padding: "10px 12px", color: "#64748b", fontFamily: "monospace" }}>{l.timestamp}</td>
                 <td style={{ padding: "10px 12px", fontWeight: 600, color: "#334155" }}>{l.actor}</td>
@@ -10202,7 +10270,9 @@ function WorkspaceAuditTab({ showToast }: WorkspaceAuditTabProps): React.ReactEl
                 </td>
                 <td style={{ padding: "10px 12px", color: "#334155" }}>{l.target}</td>
                 <td style={{ padding: "10px 12px", color: "#64748b" }}>{l.ip}</td>
-                <td style={{ padding: "10px 12px", color: "#94a3b8", fontFamily: "monospace" }}>{l.hash}</td>
+                <td style={{ padding: "10px 12px", color: "#94a3b8", fontFamily: "monospace" }} title={l.hash}>
+                  {l.hash ? `${l.hash.substring(0, 8)}...${l.hash.substring(l.hash.length - 8)}` : ""}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -11224,8 +11294,16 @@ export default function WinnowAI(): React.ReactElement {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   
   const [complianceReports, setComplianceReports] = useState<any[]>(MOCK_COMPLIANCE_REPORTS);
-  const [auditLogs, setAuditLogs] = useState<any[]>(MOCK_AUDIT_LOGS);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [signatureHistory, setSignatureHistory] = useState<any[]>(MOCK_SIGNATURE_HISTORY);
+
+  useEffect(() => {
+    async function loadAuditLedger() {
+      const ledger = await getLedger();
+      setAuditLogs(ledger);
+    }
+    loadAuditLedger();
+  }, []);
 
   const [chatHistory, setChatHistory] = useState<any[]>([
     { id: 1, title: "Metformin FAERS Q3 Analysis", date: "2 hours ago", isSurveillance: false, isUnread: false },
